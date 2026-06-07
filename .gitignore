@@ -34,3 +34,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### 10xDevs ###
+context/
+.agents/
+skills-lock.json
+.claude/
+CLAUDE.md
