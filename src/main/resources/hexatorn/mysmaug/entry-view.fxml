@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+
+<!-- TYMCZASOWE tło (#e8f0fe) — pomoc w weryfikacji przełączania; usunąć gdy realny widok zastąpi placeholder. -->
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="hexatorn.mysmaug.EntryViewController"
+           style="-fx-background-color: #e8f0fe;">
+    <Label text="Wprowadzanie" style="-fx-font-size: 28px;"/>
+</StackPane>
