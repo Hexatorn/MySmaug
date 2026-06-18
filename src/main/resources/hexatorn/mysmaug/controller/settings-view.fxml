@@ -5,7 +5,7 @@
 
 <!-- TYMCZASOWE tło (#e6f4ea) — pomoc w weryfikacji przełączania; usunąć gdy realny widok zastąpi placeholder. -->
 <StackPane xmlns:fx="http://javafx.com/fxml"
-           fx:controller="hexatorn.mysmaug.SettingsViewController"
+           fx:controller="hexatorn.mysmaug.controller.SettingsViewController"
            style="-fx-background-color: #e6f4ea;">
     <Label text="Ustawienia" style="-fx-font-size: 28px;"/>
 </StackPane>

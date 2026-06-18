@@ -3,6 +3,6 @@ module hexatorn.mysmaug {
     requires javafx.fxml;
 
 
-    opens hexatorn.mysmaug to javafx.fxml;
-    exports hexatorn.mysmaug;
+    exports hexatorn.mysmaug.app;
+    opens hexatorn.mysmaug.controller to javafx.fxml;
 }

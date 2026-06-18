@@ -5,7 +5,7 @@
 
 <!-- TYMCZASOWE tło (#fdeede) — pomoc w weryfikacji przełączania; usunąć gdy realny widok zastąpi placeholder. -->
 <StackPane xmlns:fx="http://javafx.com/fxml"
-           fx:controller="hexatorn.mysmaug.SummaryViewController"
+           fx:controller="hexatorn.mysmaug.controller.SummaryViewController"
            style="-fx-background-color: #fdeede;">
     <Label text="Podsumowania" style="-fx-font-size: 28px;"/>
 </StackPane>

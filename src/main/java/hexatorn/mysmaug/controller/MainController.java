@@ -1,4 +1,4 @@
-package hexatorn.mysmaug;
+package hexatorn.mysmaug.controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Kontroler shella: trzyma BorderPane, leniwie ładuje i cache'uje widok każdej
@@ -74,8 +75,11 @@ public class MainController {
     }
 
     private Node loadView(Section section) {
+        var url = Objects.requireNonNull(
+                MainController.class.getResource(section.fxml),
+                "Brak zasobu FXML: " + section.fxml);
         try {
-            return new FXMLLoader(MainController.class.getResource(section.fxml)).load();
+            return new FXMLLoader(url).load();
         } catch (IOException e) {
             throw new UncheckedIOException("Nie udało się załadować widoku: " + section.fxml, e);
         }
