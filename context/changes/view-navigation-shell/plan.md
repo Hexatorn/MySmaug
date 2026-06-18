@@ -282,16 +282,16 @@ Brak istotnych. Leniwe ładowanie + cache 3 lekkich widoków jest pomijalne. Atl
 
 #### Automated
 
-- [x] 1.1 Kompilacja przechodzi pod JDK 23 / JavaFX 25: `mvn -q clean compile`
+- [x] 1.1 Kompilacja przechodzi pod JDK 23 / JavaFX 25: `mvn -q clean compile` — bfc4944
 
 #### Manual
 
-- [x] 1.2 Aplikacja startuje bez wyjątku: `mvn clean javafx:run` (pod JDK 23, brak stacktrace)
-- [x] 1.3 Okno „MySmaug" z sidebarem (3 buttony: Wprowadzanie / Podsumowania / Ustawienia), domyślny wygląd
-- [x] 1.4 Kliknięcie buttona podmienia środek na odpowiedni pusty widok (inny tytuł + inny kolor tła — przełączenie jednoznaczne)
-- [x] 1.5 Widok domyślny (Wprowadzanie) pokazany od startu
-- [x] 1.6 Przełączanie tam i z powrotem działa bez błędu
-- [x] 1.7 Brak pozostałości „Hello" w UI
+- [x] 1.2 Aplikacja startuje bez wyjątku: `mvn clean javafx:run` (pod JDK 23, brak stacktrace) — bfc4944
+- [x] 1.3 Okno „MySmaug" z sidebarem (3 buttony: Wprowadzanie / Podsumowania / Ustawienia), domyślny wygląd — bfc4944
+- [x] 1.4 Kliknięcie buttona podmienia środek na odpowiedni pusty widok (inny tytuł + inny kolor tła — przełączenie jednoznaczne) — bfc4944
+- [x] 1.5 Widok domyślny (Wprowadzanie) pokazany od startu — bfc4944
+- [x] 1.6 Przełączanie tam i z powrotem działa bez błędu — bfc4944
+- [x] 1.7 Brak pozostałości „Hello" w UI — bfc4944
 
 ### Phase 2: Stylizacja na AtlantaFX (accent + CSS) + stan aktywny + ikony
 
