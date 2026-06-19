@@ -8,12 +8,12 @@
             fx:controller="hexatorn.mysmaug.controller.MainController">
     <left>
         <VBox fx:id="sidebar" spacing="8.0">
-            <Button fx:id="navWprowadzanie" text="Wprowadzanie" maxWidth="Infinity"
-                    onAction="#onWprowadzanie"/>
-            <Button fx:id="navPodsumowania" text="Podsumowania" maxWidth="Infinity"
-                    onAction="#onPodsumowania"/>
-            <Button fx:id="navUstawienia" text="Ustawienia" maxWidth="Infinity"
-                    onAction="#onUstawienia"/>
+            <Button fx:id="btnWprowadzanie" text="Wprowadzanie" maxWidth="Infinity"
+                    onAction="#onActionWprowadzanie"/>
+            <Button fx:id="btnPodsumowania" text="Podsumowania" maxWidth="Infinity"
+                    onAction="#onActionPodsumowania"/>
+            <Button fx:id="btnUstawienia" text="Ustawienia" maxWidth="Infinity"
+                    onAction="#onActionUstawienia"/>
         </VBox>
     </left>
 </BorderPane>

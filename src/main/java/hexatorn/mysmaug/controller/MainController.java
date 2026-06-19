@@ -8,6 +8,7 @@ import javafx.scene.layout.BorderPane;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
@@ -35,11 +36,11 @@ public class MainController {
     @FXML
     private BorderPane root;
     @FXML
-    private Button navWprowadzanie;
+    private Button btnWprowadzanie;
     @FXML
-    private Button navPodsumowania;
+    private Button btnPodsumowania;
     @FXML
-    private Button navUstawienia;
+    private Button btnUstawienia;
 
     /** Cache widoków — każdy FXML ładowany najwyżej raz, potem reużywany. */
     private final Map<Section, Node> viewCache = new EnumMap<>(Section.class);
@@ -53,29 +54,30 @@ public class MainController {
     }
 
     @FXML
-    private void onWprowadzanie() {
+    private void onActionWprowadzanie() {
         show(Section.WPROWADZANIE);
     }
 
     @FXML
-    private void onPodsumowania() {
+    private void onActionPodsumowania() {
         show(Section.PODSUMOWANIA);
     }
 
     @FXML
-    private void onUstawienia() {
+    private void onActionUstawienia() {
         show(Section.USTAWIENIA);
     }
 
     /** Pokazuje wskazaną sekcję — z cache lub ładując ją leniwie przy pierwszym wejściu. */
     private void show(Section section) {
         Node view = viewCache.computeIfAbsent(section, this::loadView);
+        /*Ustawienie centralnego elementu BorderPane*/
         root.setCenter(view);
         active = section;
     }
 
     private Node loadView(Section section) {
-        var url = Objects.requireNonNull(
+        URL url = Objects.requireNonNull(
                 MainController.class.getResource(section.fxml),
                 "Brak zasobu FXML: " + section.fxml);
         try {
