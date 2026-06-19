@@ -1,19 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane fx:id="root" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="hexatorn.mysmaug.controller.MainController">
+            fx:controller="hexatorn.mysmaug.controller.MainController"
+            stylesheets="@styles.css">
+    <!-- Pasek tytułu (custom chrome, okno undecorated): tytuł z lewej, przyciski okna z prawej;
+         przeciąganie po pasku przesuwa okno (onMousePressed/onMouseDragged). -->
+    <top>
+        <HBox styleClass="title-bar" onMousePressed="#onTitleBarPressed" onMouseDragged="#onTitleBarDragged">
+            <Label text="MySmaug" styleClass="title-bar-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button styleClass="window-button" onAction="#onActionMinimalizuj">
+                <graphic><FontIcon iconLiteral="mdi2w-window-minimize"/></graphic>
+            </Button>
+            <Button styleClass="window-button" onAction="#onActionMaksymalizuj">
+                <graphic><FontIcon fx:id="btnMaksymalizuj" iconLiteral="mdi2w-window-maximize"/></graphic>
+            </Button>
+            <Button styleClass="window-button, window-button-close" onAction="#onActionZamknij">
+                <graphic><FontIcon iconLiteral="mdi2c-close"/></graphic>
+            </Button>
+        </HBox>
+    </top>
     <left>
         <VBox fx:id="sidebar" spacing="8.0">
             <Button fx:id="btnWprowadzanie" text="Wprowadzanie" maxWidth="Infinity"
-                    onAction="#onActionWprowadzanie"/>
+                    styleClass="nav-button" onAction="#onActionWprowadzanie">
+                <graphic><FontIcon iconLiteral="mdi2p-plus"/></graphic>
+            </Button>
             <Button fx:id="btnPodsumowania" text="Podsumowania" maxWidth="Infinity"
-                    onAction="#onActionPodsumowania"/>
+                    styleClass="nav-button" onAction="#onActionPodsumowania">
+                <graphic><FontIcon iconLiteral="mdi2c-chart-bar"/></graphic>
+            </Button>
             <Button fx:id="btnUstawienia" text="Ustawienia" maxWidth="Infinity"
-                    onAction="#onActionUstawienia"/>
+                    styleClass="nav-button" onAction="#onActionUstawienia">
+                <graphic><FontIcon iconLiteral="mdi2c-cog"/></graphic>
+            </Button>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Button fx:id="btnZamknij" text="Zamknij" maxWidth="Infinity"
+                    styleClass="close-button" onAction="#onActionZamknij">
+                <graphic><FontIcon iconLiteral="mdi2c-close"/></graphic>
+            </Button>
         </VBox>
     </left>
 </BorderPane>

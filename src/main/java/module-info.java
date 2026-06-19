@@ -1,6 +1,9 @@
 module hexatorn.mysmaug {
     requires javafx.controls;
     requires javafx.fxml;
+    requires atlantafx.base;
+    requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.ikonli.materialdesign2;
 
 
     exports hexatorn.mysmaug.app;
