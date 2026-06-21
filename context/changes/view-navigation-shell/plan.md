@@ -278,6 +278,34 @@ Brak istotnych. Leniwe ładowanie + cache 3 lekkich widoków jest pomijalne. Atl
 - Module config: `src/main/java/module-info.java:6`
 - JavaFX 25 (auto light/dark): Scene.Preferences + `@media (prefers-color-scheme)` — `research.md` §9.4, Sources
 
+## Stan realizacji na domknięcie (2026-06-21) — co NIE zostało zrealizowane
+
+Wszystkie kryteria Progress `[x]`, ale część zakresu jest świadomie poza tą iteracją. Spis dla jasności (i przyszłych slice'ów):
+
+### Świadomie poza scope (z „What We're NOT Doing")
+- Realna funkcjonalność widoków (formularze/listy/podsumowania/ustawienia) — tylko puste mounty.
+- ViewModele / DI / MVVM — wejdą z pierwszym realnym widokiem (S-01+).
+- Zwijanie sidebara (Etap 2 nav-shell) — parked, post-MVP.
+- Automatyczne testy UI (TestFX) — tani test ładowania FXML dopiero po F-01.
+- Build/packaging (jlink/jpackage) — to F-04.
+
+### Zredefiniowane względem pierwotnego planu Fazy 2
+- **Motyw wg OS = odczyt na start, NIE śledzenie w locie.** Pierwotny plan zakładał listener `Scene.Preferences.colorScheme` przełączający motyw na żywo; redefinicja #6 zawęziła to do **jednorazowego odczytu motywu OS przy starcie** (ciemny OS → Ciemny, inaczej Jasny). Żywe śledzenie w locie nie istnieje i nie jest częścią zredefiniowanego zakresu.
+- Pierwotny model „auto light/dark + przełącznik Jasny/Ciemny/Auto ze stałym fioletem" — zastąpiony trzema odrębnymi motywami (Jasny/Dracula/Fioletowy); literalna opcja „Auto" nie istnieje.
+- Trwałe zapamiętanie wyboru motywu między uruchomieniami (persistence) — poza scope; po restarcie znów odczyt wg OS.
+
+### Odłożone w trakcie implementacji (wyszło przy stylizacji)
+- **Logo/grafika aplikacji w sidebarze** — temat ikony/logo w menu bocznym odłożony podczas stylizacji menu; do dorobienia później.
+
+### Stretch niezrobiony (kryterium 2.6 spełnione wariantem domyślnym)
+- „Białe sześciokąty" jako wskaźnik aktywnej sekcji — użyto paska akcentu + inwersji tła.
+
+### Stan tymczasowy, z założenia do usunięcia później
+- Tymczasowe kolory tła placeholderów (entry/summary/settings) — zostają, dopóki realne widoki ich nie zastąpią (pomoc weryfikacyjna).
+
+### Znane odłożone usprawnienia jakościowe (z impl-review, świadomy skip)
+- G1: bind ikony maksymalizacji do `maximizedProperty`. G2: wstrzyknięcie FontIcon jako `@FXML` zamiast castu. G3: scope'owanie user-agent stylesheetu + uninstall filtrów resize pod multi-window. F3: symetria resize krawędzi W/N. Szczegóły: `reviews/impl-review*.md`.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
