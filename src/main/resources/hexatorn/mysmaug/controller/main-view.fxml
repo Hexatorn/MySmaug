@@ -25,8 +25,8 @@
             <Button styleClass="window-button" onAction="#onActionMinimalizuj">
                 <graphic><FontIcon iconLiteral="mdi2w-window-minimize"/></graphic>
             </Button>
-            <Button styleClass="window-button" onAction="#onActionMaksymalizuj">
-                <graphic><FontIcon fx:id="btnMaksymalizuj" iconLiteral="mdi2w-window-maximize"/></graphic>
+            <Button fx:id="btnMaksymalizuj" styleClass="window-button" onAction="#onActionMaksymalizuj">
+                <graphic><FontIcon iconLiteral="mdi2w-window-maximize"/></graphic>
             </Button>
             <Button styleClass="window-button, window-button-close" onAction="#onActionZamknij">
                 <graphic><FontIcon iconLiteral="mdi2c-close"/></graphic>

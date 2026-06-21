@@ -49,7 +49,7 @@ public class MainController {
     @FXML
     private Button btnUstawienia;
     @FXML
-    private FontIcon btnMaksymalizuj;
+    private Button btnMaksymalizuj;
     @FXML
     private Button btnMotyw;
 
@@ -159,7 +159,7 @@ public class MainController {
         Stage stage = stage();
         boolean maximize = !stage.isMaximized();
         stage.setMaximized(maximize);
-        btnMaksymalizuj.setIconLiteral(maximize ? "mdi2w-window-restore" : "mdi2w-window-maximize");
+        ((FontIcon) btnMaksymalizuj.getGraphic()).setIconLiteral(maximize ? "mdi2w-window-restore" : "mdi2w-window-maximize");
     }
 
     @FXML

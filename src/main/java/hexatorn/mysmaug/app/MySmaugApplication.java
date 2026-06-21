@@ -12,13 +12,17 @@ import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 
 public class MySmaugApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         // Zdejmuje systemową belkę tytułu i ramkę okna — własny pasek tytułu rysujemy w main-view.fxml.
         stage.initStyle(StageStyle.UNDECORATED);
-        FXMLLoader fxmlLoader = new FXMLLoader(MySmaugApplication.class.getResource("/hexatorn/mysmaug/controller/main-view.fxml"));
+        URL fxmlUrl = Objects.requireNonNull(
+                MySmaugApplication.class.getResource("/hexatorn/mysmaug/controller/main-view.fxml"),
+                "Brak zasobu FXML: /hexatorn/mysmaug/controller/main-view.fxml");
+        FXMLLoader fxmlLoader = new FXMLLoader(fxmlUrl);
         Scene scene = new Scene(fxmlLoader.load(), 900, 600);
         // Motyw (AtlantaFX light/dark) wstrzykiwany do kontrolera — ThemeManager nakłada
         // user-agent stylesheet i pilnuje auto light/dark wg motywu OS.
