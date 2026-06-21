@@ -3,7 +3,7 @@ project: "MySmaug"
 version: 1
 status: draft
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-21
 prd_version: 2
 main_goal: learn
 top_blocker: capacity
@@ -33,7 +33,7 @@ Para prowadząca wspólny budżet domowy nie potrafi wiarygodnie odpowiedzieć "
 | F-02  | file-logging                  | (foundation) błędy i zdarzenia logowane do pliku obok aplikacji      | —                | NFR durability                    | ready    |
 | F-03  | portable-persistence-baseline | (foundation) połączenie SQLite ze ścieżki w configu aplikacji (lub brak), atomic write, restart-safe, init schematu na żądanie | —  | NFR durability, NFR portability, FR-005, FR-006, FR-023 | ready    |
 | F-04  | portable-app-packaging        | (foundation) app-image uruchamialny z portable media bez instalatora | —                | NFR portability                   | ready    |
-| F-05  | view-navigation-shell         | (foundation) shell + ostylowany sidebar + przełączanie widoków na pustych mountach | —                | Business Logic (nawigacja), NFR Localization | ready    |
+| F-05  | view-navigation-shell         | (foundation) shell + ostylowany sidebar + przełączanie widoków na pustych mountach | —                | Business Logic (nawigacja), NFR Localization | done     |
 | S-01  | first-transaction-persist     | dodać jedną transakcję zapisaną trwale do bazy (kategoria opcjonalna)| F-01, F-02, F-03, F-05 | US-01, FR-012, FR-011, FR-001, FR-022 | proposed |
 | S-02  | monthly-transaction-list      | zobaczyć listę transakcji bieżącego miesiąca + nawigacja prev/next   | S-01             | US-01, FR-015                     | proposed |
 | S-03  | monthly-summary               | zobaczyć miesięczne podsumowanie: suma per kategoria + razem przych./wyd. | S-01         | US-01, FR-016, FR-011             | blocked  |
@@ -138,7 +138,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Scope cap twardy — shell + ostylowany sidebar + switching + puste mounty; ZERO realnej funkcjonalności, zero stylowania środkowych widoków, brak systemu motywów na zapas. Sidebar to trwały chrome (nie placeholder), więc jego stylizacja kotwiczy wizualny baseline dziedziczony przez widoki. Front-ładuje JavaFX (blind spot) zgodnie z main_goal: learn. Etap 2 (zwijanie sidebara do paska ikon) CELOWO poza deliverable — patrz `## Parked`.
-- **Status:** ready
+- **Status:** done
 
 ## Slices (Wycinki)
 
@@ -339,3 +339,5 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 ## Done (Zrobione)
 
 (Puste przy pierwszym wygenerowaniu. `/10x-archive` dopisuje tu wpis — i przełącza Status pozycji na `done` — gdy zmiana o pasującym Change ID zostaje zarchiwizowana. NIE wypełniaj z góry.)
+
+- **F-05: (foundation) główny kontener aplikacji z trwałym, ostylowanym sidebarem (rail + buttony z labelami + ikony, STAŁA szerokość) + mechanizm przełączania środkowego obszaru widoku, zademonstrowany na 2-3 pustych panelach-placeholderach (mountach).** — Archived 2026-06-21 → `context/archive/2026-06-14-view-navigation-shell/`. Lesson: —.
