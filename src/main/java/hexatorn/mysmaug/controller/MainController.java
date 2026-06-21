@@ -1,15 +1,15 @@
 package hexatorn.mysmaug.controller;
 
+import atlantafx.base.controls.Popover;
 import hexatorn.mysmaug.app.ThemeManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -51,16 +51,13 @@ public class MainController {
     @FXML
     private FontIcon btnMaksymalizuj;
     @FXML
-    private ToggleGroup grupaMotyw;
-    @FXML
-    private ToggleButton tglMotywJasny;
-    @FXML
-    private ToggleButton tglMotywCiemny;
-    @FXML
-    private ToggleButton tglMotywFioletowy;
+    private Button btnMotyw;
 
     /** Manager motywu (Jasny/Ciemny/Fioletowy) — wstrzykiwany z MySmaugApplication po utworzeniu Scene. */
     private ThemeManager themeManager;
+
+    /** Dymek z wyborem motywu (AtlantaFX Popover) — budowany leniwie przy pierwszym otwarciu. */
+    private Popover motywPopover;
 
     /** Klasa CSS aktywnego buttona (Faza 2 — wyróżnienie aktywnej sekcji). */
     private static final String ACTIVE_CLASS = "nav-button-active";
@@ -77,25 +74,14 @@ public class MainController {
 
     @FXML
     private void initialize() {
-        // ToggleGroup pozwoliłby odznaczyć aktywny toggle (zostałby brak wyboru motywu) —
-        // blokujemy: gdy nowy wybór jest null, przywracamy poprzedni.
-        grupaMotyw.selectedToggleProperty().addListener((obs, old, current) -> {
-            if (current == null) {
-                grupaMotyw.selectToggle(old);
-            }
-        });
         show(Section.WPROWADZANIE);
     }
 
     /** Wstrzyknięcie managera motywu z punktu wejścia (po utworzeniu Scene). */
     public void setThemeManager(ThemeManager themeManager) {
         this.themeManager = themeManager;
-        // Start wg OS — zaznacz toggle odpowiadający motywowi wybranemu przez ThemeManager.
-        switch (themeManager.getTheme()) {
-            case JASNY     -> tglMotywJasny.setSelected(true);
-            case CIEMNY    -> tglMotywCiemny.setSelected(true);
-            case FIOLETOWY -> tglMotywFioletowy.setSelected(true);
-        }
+        // Start wg OS — etykieta selektora pokazuje motyw wybrany przez ThemeManager.
+        btnMotyw.setText("Motyw: " + displayName(themeManager.getTheme()));
     }
 
     @FXML
@@ -119,18 +105,48 @@ public class MainController {
     }
 
     @FXML
-    private void onActionMotywJasny() {
-        themeManager.setTheme(ThemeManager.Theme.JASNY);
+    private void onActionMotyw() {
+        if (motywPopover == null) {
+            motywPopover = buildMotywPopover();
+        }
+        motywPopover.show(btnMotyw);
     }
 
-    @FXML
-    private void onActionMotywCiemny() {
-        themeManager.setTheme(ThemeManager.Theme.CIEMNY);
+    /** Buduje dymek z trzema opcjami motywu (sam tekst, bez ikon). */
+    private Popover buildMotywPopover() {
+        VBox box = new VBox(
+                themeOption(ThemeManager.Theme.JASNY),
+                themeOption(ThemeManager.Theme.CIEMNY),
+                themeOption(ThemeManager.Theme.FIOLETOWY));
+        box.getStyleClass().add("theme-popover");
+        Popover popover = new Popover(box);
+        popover.setArrowLocation(Popover.ArrowLocation.TOP_CENTER);
+        popover.setDetachable(false);
+        popover.setHeaderAlwaysVisible(false);
+        return popover;
     }
 
-    @FXML
-    private void onActionMotywFioletowy() {
-        themeManager.setTheme(ThemeManager.Theme.FIOLETOWY);
+    private Button themeOption(ThemeManager.Theme theme) {
+        Button option = new Button(displayName(theme));
+        option.getStyleClass().add("theme-option");
+        option.setMaxWidth(Double.MAX_VALUE);
+        option.setOnAction(e -> selectMotyw(theme));
+        return option;
+    }
+
+    private void selectMotyw(ThemeManager.Theme theme) {
+        themeManager.setTheme(theme);
+        btnMotyw.setText("Motyw: " + displayName(theme));
+        motywPopover.hide();
+    }
+
+    /** Nazwa motywu w UI — Ciemny prezentowany po palecie („Dracula"). */
+    private String displayName(ThemeManager.Theme theme) {
+        return switch (theme) {
+            case JASNY     -> "Jasny";
+            case CIEMNY    -> "Dracula";
+            case FIOLETOWY -> "Fioletowy";
+        };
     }
 
     @FXML

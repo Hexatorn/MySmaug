@@ -116,36 +116,50 @@
     -fx-icon-color: white;
 }
 
-/* ───────── Przełącznik motywu — segmentowany pasek w torze ───────── */
-.theme-switch {
-    -fx-alignment: CENTER;
-    -fx-background-color: -color-bg-inset;
-    -fx-background-radius: 9px;
-    -fx-padding: 3px;
-}
-
-.theme-toggle {
+/* ───────── Selektor motywu w pasku tytułu — lekki, kompaktowy (etykieta + chevron pod spodem) ───────── */
+.theme-selector {
     -fx-background-color: transparent;
-    -fx-background-radius: 7px;
-    -fx-padding: 7px 16px;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 13px;
+    -fx-padding: 0 10px;
+    -fx-graphic-text-gap: 5px;
     -fx-cursor: hand;
 }
 
-.theme-toggle:hover {
+.theme-selector:hover {
     -fx-background-color: -color-bg-subtle;
+    -fx-text-fill: -color-fg-default;
 }
 
-.theme-toggle:selected {
-    -fx-background-color: -color-accent-emphasis;
-}
-
-.theme-toggle .ikonli-font-icon {
+.theme-selector .ikonli-font-icon {
     -fx-icon-color: -color-fg-muted;
-    -fx-icon-size: 16px;
+    -fx-icon-size: 13px;
 }
 
-.theme-toggle:selected .ikonli-font-icon {
-    -fx-icon-color: white;
+.theme-selector:hover .ikonli-font-icon {
+    -fx-icon-color: -color-fg-default;
+}
+
+/* Dymek wyboru motywu (AtlantaFX Popover) — lista opcji tekstowych. */
+.theme-popover {
+    -fx-padding: 4px;
+    -fx-spacing: 2px;
+    -fx-min-width: 150px;
+}
+
+.theme-option {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -color-fg-default;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 7px 12px;
+    -fx-cursor: hand;
+}
+
+.theme-option:hover {
+    -fx-background-color: -color-accent-subtle;
+    -fx-text-fill: -color-accent-fg;
 }
 
 /* ───────── Motyw Ciemny — neutralne wyróżnienie aktywnej sekcji (bez fioletu Draculi) ───────── */
@@ -225,23 +239,20 @@
     -fx-background-color: rgba(255, 255, 255, 0.22);
 }
 
-/* Przełącznik w fiolecie — tor i pole zaznaczenia dopasowane do purpurowego sidebara. */
-.theme-fioletowy .theme-switch {
-    -fx-background-color: rgba(255, 255, 255, 0.15);
+/* Selektor motywu w fiolecie — na purpurowym pasku tytułu biały tekst i chevron. */
+.theme-fioletowy .theme-selector {
+    -fx-text-fill: white;
 }
 
-.theme-fioletowy .theme-toggle:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.25);
-}
-
-.theme-fioletowy .theme-toggle:selected {
-    -fx-background-color: white;
-}
-
-.theme-fioletowy .theme-toggle .ikonli-font-icon {
+.theme-fioletowy .theme-selector .ikonli-font-icon {
     -fx-icon-color: white;
 }
 
-.theme-fioletowy .theme-toggle:selected .ikonli-font-icon {
-    -fx-icon-color: -color-accent-emphasis;
+.theme-fioletowy .theme-selector:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.22);
+    -fx-text-fill: white;
+}
+
+.theme-fioletowy .theme-selector:hover .ikonli-font-icon {
+    -fx-icon-color: white;
 }
