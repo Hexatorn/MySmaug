@@ -1,4 +1,4 @@
-package hexatorn.mysmaug.app;
+package hexatorn.mysmaug.tools;
 
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
@@ -10,7 +10,7 @@ import javafx.stage.Stage;
  * którego StageStyle.UNDECORATED nie zapewnia. Instaluje filtry na Scene: kursor
  * w strefie BORDER przy krawędzi przełącza kursor i pozwala ciągnięciem zmieniać rozmiar.
  */
-final class WindowResizeHelper {
+public final class WindowResizeHelper {
 
     private static final double BORDER = 6;   // szerokość strefy chwytu przy krawędzi (px)
     private static final double MIN_W = 600;
@@ -23,7 +23,7 @@ final class WindowResizeHelper {
         this.stage = stage;
     }
 
-    static void install(Stage stage, Scene scene) {
+    public static void install(Stage stage, Scene scene) {
         WindowResizeHelper helper = new WindowResizeHelper(stage);
         // Filtry (faza przechwytywania) — wyprzedzają handlery węzłów, np. drag paska tytułu.
         scene.addEventFilter(MouseEvent.MOUSE_MOVED, e -> helper.updateCursor(scene, e));

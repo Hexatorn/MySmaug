@@ -1,4 +1,4 @@
-package hexatorn.mysmaug.app;
+package hexatorn.mysmaug.tools;
 
 import atlantafx.base.theme.Dracula;
 import atlantafx.base.theme.PrimerLight;

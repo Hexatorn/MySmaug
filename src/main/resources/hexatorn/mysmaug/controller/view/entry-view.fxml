@@ -5,7 +5,7 @@
 
 <!-- TYMCZASOWE tło (#e8f0fe) — pomoc w weryfikacji przełączania; usunąć gdy realny widok zastąpi placeholder. -->
 <StackPane xmlns:fx="http://javafx.com/fxml"
-           fx:controller="hexatorn.mysmaug.controller.EntryViewController"
+           fx:controller="hexatorn.mysmaug.controller.view.EntryViewController"
            style="-fx-background-color: #e8f0fe;">
     <Label text="Wprowadzanie" style="-fx-font-size: 28px;"/>
 </StackPane>

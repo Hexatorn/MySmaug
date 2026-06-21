@@ -1,7 +1,7 @@
 package hexatorn.mysmaug.controller;
 
 import atlantafx.base.controls.Popover;
-import hexatorn.mysmaug.app.ThemeManager;
+import hexatorn.mysmaug.tools.ThemeManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,9 +29,9 @@ public class MainController {
 
     /** Sekcje nawigacji; każda zna swój plik FXML (widok ładowany leniwie). */
     private enum Section {
-        WPROWADZANIE("entry-view.fxml"),
-        PODSUMOWANIA("summary-view.fxml"),
-        USTAWIENIA("settings-view.fxml");
+        WPROWADZANIE("view/entry-view.fxml"),
+        PODSUMOWANIA("view/summary-view.fxml"),
+        USTAWIENIA("view/settings-view.fxml");
 
         private final String fxml;
 

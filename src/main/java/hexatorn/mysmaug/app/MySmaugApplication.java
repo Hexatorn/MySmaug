@@ -1,6 +1,8 @@
 package hexatorn.mysmaug.app;
 
 import hexatorn.mysmaug.controller.MainController;
+import hexatorn.mysmaug.tools.ThemeManager;
+import hexatorn.mysmaug.tools.WindowResizeHelper;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

@@ -10,7 +10,7 @@
 
 <BorderPane fx:id="root" xmlns:fx="http://javafx.com/fxml"
             fx:controller="hexatorn.mysmaug.controller.MainController"
-            stylesheets="@styles.css">
+            stylesheets="@../styles.css">
     <!-- Pasek tytułu (custom chrome, okno undecorated): tytuł z lewej, przyciski okna z prawej;
          przeciąganie po pasku przesuwa okno (onMousePressed/onMouseDragged). -->
     <top>

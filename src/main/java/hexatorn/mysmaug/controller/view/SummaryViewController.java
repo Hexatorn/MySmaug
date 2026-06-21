@@ -1,4 +1,4 @@
-package hexatorn.mysmaug.controller;
+package hexatorn.mysmaug.controller.view;
 
 /**
  * Pusty kontroler widoku „Podsumowania" (F-05, Faza 1). Istnieje, by ustalić

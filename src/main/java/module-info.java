@@ -8,4 +8,5 @@ module hexatorn.mysmaug {
 
     exports hexatorn.mysmaug.app;
     opens hexatorn.mysmaug.controller to javafx.fxml;
+    opens hexatorn.mysmaug.controller.view to javafx.fxml;
 }
