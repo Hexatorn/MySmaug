@@ -212,6 +212,10 @@ Ubranie trwałego chrome (sidebar + buttony) na bazie AtlantaFX i wyróżnienie 
 
 **Contract**: Auto-detekcja przez `Scene.Preferences.colorScheme` (listener przełącza motyw w locie, bez restartu). Manualny przełącznik w sidebarze z 3 stanami (Jasny / Ciemny / Auto) — Auto śledzi OS, stan jawny nadpisuje i ustawia `setUserAgentStylesheet(PrimerLight|PrimerDark)`. Override akcentu (fiolet) na `.root` działa w obu motywach (zweryfikować kontrast na ciemnym). **Poza scope:** trwałe zapamiętanie wyboru między uruchomieniami (persistence) — po restarcie wraca do Auto.
 
+> **Aktualizacja 2026-06-21 (redefinicja #6 — nadrzędna nad powyższym Contract oraz kryteriami 2.10/2.11):** Model „auto light/dark + przełącznik Jasny/Ciemny/Auto ze stałym fioletowym akcentem" zastąpiony **trzema odrębnymi motywami**: Jasny (PrimerLight), Ciemny = **Dracula** (≈ IntelliJ Darcula), Fioletowy (dotychczasowy purpurowy jako osobny motyw). Start wg preferencji OS (`Platform.getPreferences().colorScheme`): ciemny OS → Ciemny, inaczej Jasny; Fioletowy tylko ręcznie. **Żywe śledzenie OS w locie świadomie odłożone** — start wg OS wystarcza (persistence dalej poza scope). Przełącznik to **Popover w pasku tytułu** (Jasny/Dracula/Fioletowy), świadomie odsunięty od „Zamknij" (UX: akcja destrukcyjna z dala od częstej). Sidebar/chrome na zmiennych semantycznych AtlantaFX (Jasny/Ciemny adaptują się same), Fioletowy jako nadpisanie; w Ciemnym aktywna sekcja neutralna (bez fioletu Draculi), w Fiolecie pasek tytułu ciemniejszy od sidebara. Commity: `4ae45d9` (3 motywy), `a6f2a81` (Popover w pasku tytułu), `6983332` (rozdzielenie paska w Fiolecie); refaktor pakietów `842c715`.
+
+> **Aktualizacja 2026-06-21 (aneks — custom chrome okna, poza pierwotnymi punktami 1–6):** Faza 2 dołożyła **własny chrome okna**: `StageStyle.UNDECORATED` (zdjęta systemowa belka/ramka), własny pasek tytułu w `main-view.fxml` (tytuł + przyciski Minimalizuj/Maksymalizuj/Zamknij + przeciąganie okna) oraz `tools/WindowResizeHelper` odtwarzający natywny resize krawędzi/rogów. **Powód:** redefinicja #6 osadziła przełącznik motywu jako Popover **w pasku tytułu** — to wymusiło własny pasek, a spójny wygląd wymagał zdjęcia natywnej dekoracji systemowej. Świadoma, zaakceptowana decyzja (bramka 2.9). **Poza scope zostaje** dopracowanie resize (symetria krawędzi W/N przy minimum, obsługa multi-monitor) — drobny defekt UX do ewentualnej poprawki. Commity: `ddab317` (chrome + WindowResizeHelper), `842c715` (pakiet `tools/`).
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -297,17 +301,17 @@ Brak istotnych. Leniwe ładowanie + cache 3 lekkich widoków jest pomijalne. Atl
 
 #### Automated
 
-- [ ] 2.1 Kompilacja przechodzi pod JDK 23 / JavaFX 25: `mvn -q clean compile`
+- [x] 2.1 Kompilacja przechodzi pod JDK 23 / JavaFX 25: `mvn -q clean compile` — ddab317
 
 #### Manual
 
-- [ ] 2.2 Aplikacja startuje bez wyjątku (brak błędu CSS/AtlantaFX): `mvn clean javafx:run`
-- [ ] 2.3 Sidebar fioletowy (akcent AtlantaFX), stała szerokość; buttony bez obramowania, tło zlane
-- [ ] 2.4 Każdy button nawigacji ma ikonę obok etykiety
-- [ ] 2.5 Hover = inwersja kolorów + efekt wciśnięcia
-- [ ] 2.6 Aktywna sekcja wyróżniona (pasek akcentu / inwersja tła; sześciokąty opcjonalny stretch)
-- [ ] 2.7 Gęstość komfortowa (czytelny padding)
-- [ ] 2.8 Środkowe widoki bez docelowego stylu (tymczasowy tint OK)
-- [ ] 2.9 Wygląd zaakceptowany na żywej aplikacji
-- [ ] 2.10 Zmiana motywu OS przełącza aplikację w locie (tryb Auto), bez restartu
-- [ ] 2.11 Manualny przełącznik Jasny/Ciemny/Auto działa; akcent (fiolet) czytelny w obu motywach
+- [x] 2.2 Aplikacja startuje bez wyjątku (brak błędu CSS/AtlantaFX): `mvn clean javafx:run` — ddab317
+- [x] 2.3 Sidebar fioletowy (akcent AtlantaFX), stała szerokość; buttony bez obramowania, tło zlane — ddab317
+- [x] 2.4 Każdy button nawigacji ma ikonę obok etykiety — ddab317
+- [x] 2.5 Hover = inwersja kolorów + efekt wciśnięcia — ddab317
+- [x] 2.6 Aktywna sekcja wyróżniona (pasek akcentu / inwersja tła; sześciokąty opcjonalny stretch) — ddab317
+- [x] 2.7 Gęstość komfortowa (czytelny padding) — ddab317
+- [x] 2.8 Środkowe widoki bez docelowego stylu (tymczasowy tint OK) — ddab317
+- [x] 2.9 Wygląd zaakceptowany na żywej aplikacji — ddab317
+- [x] 2.10 Start motywu wg preferencji OS (ciemny OS → Ciemny, inaczej Jasny); żywe śledzenie OS w locie świadomie odłożone — 4ae45d9
+- [x] 2.11 Trzy odrębne motywy (Jasny/Dracula/Fioletowy) + manualny przełącznik jako Popover w pasku tytułu; kontrast czytelny w każdym motywie — 4ae45d9, a6f2a81
