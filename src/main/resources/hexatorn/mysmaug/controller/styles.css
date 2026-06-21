@@ -1,32 +1,37 @@
-/* MySmaug — warstwa na AtlantaFX (Primer). Akcent fiolet + specyfika sidebara. */
+/* MySmaug — warstwa na AtlantaFX. Trzy motywy: Jasny (PrimerLight), Ciemny (Dracula),
+   Fioletowy (PrimerLight + fioletowy akcent). Style bazowe jadą na zmiennych semantycznych
+   AtlantaFX (-color-*), więc Jasny/Ciemny adaptują się same; Fioletowy to nadpisanie pod
+   selektorem .theme-fioletowy (klasa nakładana na root przez ThemeManager). */
 
-.root {
-    -color-accent-fg:       #8250DF;
-    -color-accent-emphasis: #8250DF;
-    -color-accent-muted:    rgba(130, 80, 223, 0.4);
-    -color-accent-subtle:   #FBEFFF;
-}
-
-/* Sidebar — stała szerokość, tło akcentu, buttony zlane z tłem. */
+/* ───────── Sidebar (bazowo — adaptuje się do Jasny/Ciemny przez zmienne AtlantaFX) ───────── */
 #sidebar {
-    -fx-min-width: 200px;
-    -fx-pref-width: 200px;
+    -fx-min-width: 220px;
+    -fx-pref-width: 220px;
     -fx-padding: 12px;
-    -fx-background-color: -color-accent-emphasis;
+    -fx-background-color: -color-bg-subtle;
 }
 
 .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: white;
+    -fx-text-fill: -color-fg-default;
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 10px 14px;
     -fx-background-radius: 8px;
     -fx-cursor: hand;
 }
 
+.nav-button .ikonli-font-icon {
+    -fx-icon-color: -color-fg-default;
+    -fx-icon-size: 18px;
+}
+
 .nav-button:hover {
-    -fx-background-color: white;
-    -fx-text-fill: -color-accent-emphasis;
+    -fx-background-color: -color-accent-subtle;
+    -fx-text-fill: -color-accent-fg;
+}
+
+.nav-button:hover .ikonli-font-icon {
+    -fx-icon-color: -color-accent-fg;
 }
 
 .nav-button:pressed {
@@ -34,58 +39,58 @@
     -fx-scale-y: 0.97;
 }
 
-/* Aktywna sekcja — jasnofioletowe tło + pasek akcentu po lewej. */
+/* Aktywna sekcja — tło akcentu + pasek akcentu po lewej. */
 .nav-button-active,
 .nav-button-active:hover {
-    -fx-background-color: #EDE7FB;
-    -fx-text-fill: -color-accent-emphasis;
+    -fx-background-color: -color-accent-muted;
+    -fx-text-fill: -color-accent-fg;
     -fx-font-weight: bold;
     -fx-border-color: -color-accent-emphasis;
     -fx-border-width: 0 0 0 4px;
 }
 
-/* Ikony w sidebarze — domyślnie białe; nav w hover/aktywnym przejmuje akcent (jak tekst). */
-.nav-button .ikonli-font-icon,
-.close-button .ikonli-font-icon {
-    -fx-icon-color: white;
-    -fx-icon-size: 18px;
-}
-
-.nav-button:hover .ikonli-font-icon,
 .nav-button-active .ikonli-font-icon {
-    -fx-icon-color: -color-accent-emphasis;
+    -fx-icon-color: -color-accent-fg;
 }
 
 /* Przycisk zamknięcia (dół sidebara) — hover czerwony jako sygnał wyjścia. */
 .close-button {
     -fx-background-color: transparent;
-    -fx-text-fill: white;
+    -fx-text-fill: -color-fg-default;
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 10px 14px;
     -fx-background-radius: 8px;
     -fx-cursor: hand;
 }
 
+.close-button .ikonli-font-icon {
+    -fx-icon-color: -color-fg-default;
+    -fx-icon-size: 18px;
+}
+
 .close-button:hover {
-    -fx-background-color: #FF7B7B;
+    -fx-background-color: -color-danger-emphasis;
     -fx-text-fill: white;
 }
 
-/* Pasek tytułu (custom chrome, okno undecorated) — w akcencie, na wzór belki Windows. */
+.close-button:hover .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+/* ───────── Pasek tytułu (custom chrome, okno undecorated) — bazowo adaptuje się ───────── */
 .title-bar {
-    -fx-background-color: -color-accent-emphasis;
+    -fx-background-color: -color-bg-inset;
     -fx-alignment: CENTER_LEFT;
     -fx-pref-height: 34px;
     -fx-padding: 0 0 0 14px;
 }
 
 .title-bar-label {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-fg-default;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
 }
 
-/* Przyciski okna (min/maks/przywróć/zamknij) — pełna wysokość paska, kwadratowe, szary hover. */
 .window-button {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
@@ -95,14 +100,148 @@
 }
 
 .window-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.22);
+    -fx-background-color: -color-bg-subtle;
 }
 
 .window-button .ikonli-font-icon {
-    -fx-icon-color: white;
+    -fx-icon-color: -color-fg-default;
     -fx-icon-size: 16px;
 }
 
 .window-button-close:hover {
-    -fx-background-color: #FF7B7B;
+    -fx-background-color: -color-danger-emphasis;
+}
+
+.window-button-close:hover .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+/* ───────── Przełącznik motywu — segmentowany pasek w torze ───────── */
+.theme-switch {
+    -fx-alignment: CENTER;
+    -fx-background-color: -color-bg-inset;
+    -fx-background-radius: 9px;
+    -fx-padding: 3px;
+}
+
+.theme-toggle {
+    -fx-background-color: transparent;
+    -fx-background-radius: 7px;
+    -fx-padding: 7px 16px;
+    -fx-cursor: hand;
+}
+
+.theme-toggle:hover {
+    -fx-background-color: -color-bg-subtle;
+}
+
+.theme-toggle:selected {
+    -fx-background-color: -color-accent-emphasis;
+}
+
+.theme-toggle .ikonli-font-icon {
+    -fx-icon-color: -color-fg-muted;
+    -fx-icon-size: 16px;
+}
+
+.theme-toggle:selected .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+/* ───────── Motyw Ciemny — neutralne wyróżnienie aktywnej sekcji (bez fioletu Draculi) ───────── */
+.theme-ciemny .nav-button-active,
+.theme-ciemny .nav-button-active:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-text-fill: -color-fg-default;
+    -fx-border-color: -color-fg-muted;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.theme-ciemny .nav-button-active .ikonli-font-icon {
+    -fx-icon-color: -color-fg-default;
+}
+
+/* ───────── Motyw Fioletowy — nadpisania (purpurowy sidebar + akcent) ───────── */
+.theme-fioletowy {
+    -color-accent-fg:       #8250DF;
+    -color-accent-emphasis: #8250DF;
+    -color-accent-muted:    rgba(130, 80, 223, 0.4);
+    -color-accent-subtle:   #FBEFFF;
+}
+
+.theme-fioletowy #sidebar {
+    -fx-background-color: -color-accent-emphasis;
+}
+
+.theme-fioletowy .nav-button {
+    -fx-text-fill: white;
+}
+
+.theme-fioletowy .nav-button .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.theme-fioletowy .nav-button:hover {
+    -fx-background-color: white;
+    -fx-text-fill: -color-accent-emphasis;
+}
+
+.theme-fioletowy .nav-button:hover .ikonli-font-icon {
+    -fx-icon-color: -color-accent-emphasis;
+}
+
+.theme-fioletowy .nav-button-active,
+.theme-fioletowy .nav-button-active:hover {
+    -fx-background-color: #EDE7FB;
+    -fx-text-fill: -color-accent-emphasis;
+    -fx-border-color: white;
+}
+
+.theme-fioletowy .nav-button-active .ikonli-font-icon {
+    -fx-icon-color: -color-accent-emphasis;
+}
+
+.theme-fioletowy .close-button {
+    -fx-text-fill: white;
+}
+
+.theme-fioletowy .close-button .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.theme-fioletowy .title-bar {
+    -fx-background-color: -color-accent-emphasis;
+}
+
+.theme-fioletowy .title-bar-label {
+    -fx-text-fill: white;
+}
+
+.theme-fioletowy .window-button .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.theme-fioletowy .window-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Przełącznik w fiolecie — tor i pole zaznaczenia dopasowane do purpurowego sidebara. */
+.theme-fioletowy .theme-switch {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+}
+
+.theme-fioletowy .theme-toggle:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.25);
+}
+
+.theme-fioletowy .theme-toggle:selected {
+    -fx-background-color: white;
+}
+
+.theme-fioletowy .theme-toggle .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.theme-fioletowy .theme-toggle:selected .ikonli-font-icon {
+    -fx-icon-color: -color-accent-emphasis;
 }

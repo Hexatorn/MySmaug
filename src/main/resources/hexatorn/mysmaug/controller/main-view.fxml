@@ -2,6 +2,9 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -43,6 +46,27 @@
                 <graphic><FontIcon iconLiteral="mdi2c-cog"/></graphic>
             </Button>
             <Region VBox.vgrow="ALWAYS"/>
+            <!-- Przełącznik motywu (Jasny / Ciemny / Fioletowy) — segmentowany pasek; zaznaczenie startowe ustawia kod wg OS. -->
+            <HBox styleClass="theme-switch" spacing="0.0">
+                <fx:define>
+                    <ToggleGroup fx:id="grupaMotyw"/>
+                </fx:define>
+                <ToggleButton fx:id="tglMotywJasny" styleClass="theme-toggle" toggleGroup="$grupaMotyw"
+                              onAction="#onActionMotywJasny">
+                    <graphic><FontIcon iconLiteral="mdi2w-white-balance-sunny"/></graphic>
+                    <tooltip><Tooltip text="Jasny"/></tooltip>
+                </ToggleButton>
+                <ToggleButton fx:id="tglMotywCiemny" styleClass="theme-toggle" toggleGroup="$grupaMotyw"
+                              onAction="#onActionMotywCiemny">
+                    <graphic><FontIcon iconLiteral="mdi2w-weather-night"/></graphic>
+                    <tooltip><Tooltip text="Ciemny"/></tooltip>
+                </ToggleButton>
+                <ToggleButton fx:id="tglMotywFioletowy" styleClass="theme-toggle" toggleGroup="$grupaMotyw"
+                              onAction="#onActionMotywFioletowy">
+                    <graphic><FontIcon iconLiteral="mdi2p-palette"/></graphic>
+                    <tooltip><Tooltip text="Fioletowy"/></tooltip>
+                </ToggleButton>
+            </HBox>
             <Button fx:id="btnZamknij" text="Zamknij" maxWidth="Infinity"
                     styleClass="close-button" onAction="#onActionZamknij">
                 <graphic><FontIcon iconLiteral="mdi2c-close"/></graphic>

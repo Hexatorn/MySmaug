@@ -1,10 +1,13 @@
 package hexatorn.mysmaug.controller;
 
+import hexatorn.mysmaug.app.ThemeManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -47,6 +50,17 @@ public class MainController {
     private Button btnUstawienia;
     @FXML
     private FontIcon btnMaksymalizuj;
+    @FXML
+    private ToggleGroup grupaMotyw;
+    @FXML
+    private ToggleButton tglMotywJasny;
+    @FXML
+    private ToggleButton tglMotywCiemny;
+    @FXML
+    private ToggleButton tglMotywFioletowy;
+
+    /** Manager motywu (Jasny/Ciemny/Fioletowy) — wstrzykiwany z MySmaugApplication po utworzeniu Scene. */
+    private ThemeManager themeManager;
 
     /** Klasa CSS aktywnego buttona (Faza 2 — wyróżnienie aktywnej sekcji). */
     private static final String ACTIVE_CLASS = "nav-button-active";
@@ -63,7 +77,25 @@ public class MainController {
 
     @FXML
     private void initialize() {
+        // ToggleGroup pozwoliłby odznaczyć aktywny toggle (zostałby brak wyboru motywu) —
+        // blokujemy: gdy nowy wybór jest null, przywracamy poprzedni.
+        grupaMotyw.selectedToggleProperty().addListener((obs, old, current) -> {
+            if (current == null) {
+                grupaMotyw.selectToggle(old);
+            }
+        });
         show(Section.WPROWADZANIE);
+    }
+
+    /** Wstrzyknięcie managera motywu z punktu wejścia (po utworzeniu Scene). */
+    public void setThemeManager(ThemeManager themeManager) {
+        this.themeManager = themeManager;
+        // Start wg OS — zaznacz toggle odpowiadający motywowi wybranemu przez ThemeManager.
+        switch (themeManager.getTheme()) {
+            case JASNY     -> tglMotywJasny.setSelected(true);
+            case CIEMNY    -> tglMotywCiemny.setSelected(true);
+            case FIOLETOWY -> tglMotywFioletowy.setSelected(true);
+        }
     }
 
     @FXML
@@ -84,6 +116,21 @@ public class MainController {
     @FXML
     private void onActionZamknij() {
         Platform.exit();
+    }
+
+    @FXML
+    private void onActionMotywJasny() {
+        themeManager.setTheme(ThemeManager.Theme.JASNY);
+    }
+
+    @FXML
+    private void onActionMotywCiemny() {
+        themeManager.setTheme(ThemeManager.Theme.CIEMNY);
+    }
+
+    @FXML
+    private void onActionMotywFioletowy() {
+        themeManager.setTheme(ThemeManager.Theme.FIOLETOWY);
     }
 
     @FXML
