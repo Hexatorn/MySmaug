@@ -1,0 +1,12 @@
+/*
+ * SPIKE — weryfikacja, czy maven-compiler-plugin 4.x faktycznie czyta ten plik
+ * i tłumaczy go na flagi JVM. Łata produkcyjny module-info.class na czas testów,
+ * bez modyfikowania src/main/java/module-info.java.
+ */
+patch-module hexatorn.mysmaug {
+    add-modules TEST-MODULE-PATH;
+    add-reads TEST-MODULE-PATH;
+
+    add-opens hexatorn.mysmaug
+           to org.junit.platform.commons;
+}
