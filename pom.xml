@@ -55,6 +55,15 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Asercje testowe: jeden styl assertThat(...) w całym harnessie — TestFX wystawia
+             własne API asercji zbudowane na AssertJ, więc nie mieszamy dwóch filozofii. -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -66,6 +75,17 @@
                 <configuration>
                     <release>23</release>
                 </configuration>
+            </plugin>
+            <!-- Runner testów przypięty jawnie. Bez tego Maven 4 dowiązuje własną wersję (3.5.2),
+                 która ciągnie rozjechaną linię JUnit Platform (engine 1.9.3 obok launchera 1.12.1),
+                 a kolejny upgrade Mavena mógłby po cichu zmienić runner.
+                 Bez <configuration> — przełącznik -DexcludedGroups=ui idzie właściwościami
+                 providera surefire-junit-platform; konfigurację dopisujemy dopiero, gdyby okazała
+                 się potrzebna. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.5</version>
             </plugin>
             <plugin>
                 <groupId>org.openjfx</groupId>
