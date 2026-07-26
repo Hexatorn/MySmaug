@@ -1,12 +1,13 @@
 package hexatorn.mysmaug;
 
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -27,19 +28,33 @@ import static org.assertj.core.api.Assertions.assertThat;
  * slice'ie wymagałby pamiętania o dopisaniu wpisu, a pominięcie nie dawałoby żadnego sygnału.
  * Skaner odwrotnie — zasób dodany w istniejącej konwencji wpada do niego sam.
  *
- * <p><b>Wada testu wyprowadzanego i obrona przed nią.</b> Gdyby reguła ekstrakcji przestała
- * pasować do kodu (ścieżki przeniesione do pliku właściwości, sklejane z kilku napisów),
- * skaner znalazłby zero odwołań, a asercja na pustym zbiorze braków przeszłaby — zielony bez
- * żadnego pokrycia. To samo zdarzenie, które wprowadza ryzyko, wyłączyłoby jego wykrywanie.
- * Dlatego {@link #skanerZnajdujeOdwolaniaDoZasobow()} pilnuje samego skanera: katalogi źródeł
- * muszą istnieć, a wśród znalezisk musi być co najmniej jeden FXML i jeden arkusz CSS.
- * Dla {@code .png} podłogi nie ma — jedyny dziś to ikona aplikacji, ładowana warunkowo.
+ * <p><b>Jeden test na zasób.</b> {@link #kazdyZasobZKoduJestWidocznyNaClasspath()} to fabryka
+ * ({@code @TestFactory}), nie pojedynczy test: buduje osobny przypadek dla każdego znaleziska,
+ * nazwany jego ścieżką. Dzięki temu przy czerwieni winowajca stoi w nazwie testu, a nie dopiero
+ * w komunikacie asercji, a liczba testów w raporcie odpowiada liczbie pokrytych zasobów.
+ * Fabryka nie wymaga dodatkowej zależności — {@code DynamicTest} należy do junit-jupiter-api.
  *
- * <p><b>Świadome ograniczenie zakresu:</b> skaner obsługuje konwencje ładowania, które
- * projekt faktycznie stosuje. Ścieżki składanej w czasie działania nie wykryje i nie budujemy
- * pod to obsługi, dopóki taki kod nie powstanie. Klasę awarii, która się prześlizgnie, ma
- * złapać TestFX. Przy dodawaniu zasobu poza istniejącą konwencją — patrz
- * {@code src/main/resources/CLAUDE.md}.
+ * <p><b>Dwa kierunki, które się wzajemnie kontrolują.</b>
+ * {@link #kazdyZasobZKoduJestWidocznyNaClasspath()} idzie od kodu do pliku i łapie zasób
+ * usunięty, przeniesiony albo wypadnięty z pakowania. {@link #kazdyZasobNaDyskuJestUzywanyPrzezKod()}
+ * idzie odwrotnie i łapie plik osierocony — taki, którego nikt nie ładuje, a który mimo to jedzie
+ * do artefaktu.
+ *
+ * <p><b>Wada testu wyprowadzanego i obrona przed nią.</b> Gdyby reguła ekstrakcji przestała
+ * pasować do kodu (ścieżki przeniesione do pliku właściwości, sklejane z kilku napisów), skaner
+ * znalazłby mniej odwołań albo zero, a fabryka kod&rarr;zasób wyprodukowałaby odpowiednio mniej
+ * testów — same przechodzące. To samo zdarzenie, które wprowadza ryzyko, wyłączyłoby jego
+ * wykrywanie. Dlatego kierunek odwrotny jest tu ważniejszy niż wykrywanie sierot: pliki dalej leżą
+ * na dysku, więc zapali się na wszystkich naraz. Dodatkowo
+ * {@link #skanerZnajdujeOdwolaniaDoZasobow()} trzyma podłogę na wypadek, gdyby zniknęły też same
+ * katalogi źródeł: muszą istnieć, a wśród znalezisk musi być co najmniej jeden FXML i jeden arkusz
+ * CSS. Dla {@code .png} podłogi nie ma — jedyny dziś to ikona aplikacji, ładowana warunkowo, więc
+ * wymóg jej obecności kłóciłby się z kodem.
+ *
+ * <p><b>Świadome ograniczenie zakresu:</b> skaner obsługuje konwencje ładowania, które projekt
+ * faktycznie stosuje. Ścieżki składanej w czasie działania nie wykryje i nie budujemy pod to
+ * obsługi, dopóki taki kod nie powstanie. Klasę awarii, która się prześlizgnie, ma złapać
+ * TestFX.
  *
  * <p>Bez uruchamiania toolkitu JavaFX, bez {@code @Tag("ui")}.
  */
@@ -49,20 +64,35 @@ class ResourcesTest {
     private static final Path KATALOG_ZASOBOW = Path.of("src", "main", "resources");
 
     /**
+     * Rozszerzenia, po których skaner <b>tekstu</b> rozpoznaje ścieżkę zasobu. Dotyczy wyłącznie
+     * kierunku kod&rarr;zasób: przeszukując źródła, trzeba jakoś odróżnić literał ze ścieżką od
+     * dowolnego innego napisu, a rozszerzenie jest tu jedyną zaczepką. Kierunek odwrotny żadnego
+     * filtra nie ma — enumeruje katalog, więc niczego nie musi zgadywać.
+     *
+     * <p>Skutek tej asymetrii jest zamierzony: zasób o nieznanym rozszerzeniu zgłosi się jako
+     * osierocony i tym samym upomni o dopisanie go tutaj. Lista nie jest definicją „co jest
+     * zasobem", tylko stanem wiedzy skanera tekstu — a drugi kierunek pilnuje jej aktualności.
+     *
+     * <p>Zapisane jako literał, żeby wyrażenia niżej pozostały stałymi kompilacji — inaczej
+     * inspekcja wyrażeń regularnych w IDE nie umie ich rozwinąć i zgłasza fałszywe ostrzeżenia.
+     */
+    private static final String ALTERNATYWA = "fxml|css|png";
+
+    /**
      * Literał w kodzie Javy wskazujący zasób — cały napis, kończący się rozszerzeniem zasobu.
      * Zakaz białych znaków odsiewa komunikaty w rodzaju {@code "Brak zasobu FXML: /hexatorn/..."}
      * (MySmaugApplication:24), które kończą się tak samo, a ścieżkami nie są. Ścieżki zasobów
      * spacji nie zawierają, więc nic sensownego przez to nie tracimy.
      */
     private static final Pattern LITERAL_JAVA =
-            Pattern.compile("\"([^\"\\s]+\\.(?:fxml|css|png))\"");
+            Pattern.compile("\"([^\"\\s]+\\.(?:" + ALTERNATYWA + "))\"");
 
     /**
      * Odwołanie wewnątrz FXML-a — wartość atrybutu, opcjonalnie z prefiksem {@code @}
      * (np. {@code stylesheets}, {@code fx:include source}, {@code Image url}).
      */
     private static final Pattern ODWOLANIE_FXML =
-            Pattern.compile("=\"(@?[^\"\\s]*\\.(?:fxml|css|png))\"");
+            Pattern.compile("=\"(@?[^\"\\s]*\\.(?:" + ALTERNATYWA + "))\"");
 
     @Test
     void skanerZnajdujeOdwolaniaDoZasobow() throws IOException {
@@ -86,24 +116,63 @@ class ResourcesTest {
                 .anyMatch(odwolanie -> odwolanie.endsWith(".css"));
     }
 
-    @Test
-    void wszystkieZasobyZKoduSaWidoczneNaClasspath() throws IOException {
-        Set<String> odwolania = skanujOdwolania();
+    /**
+     * Po jednym teście na każde znalezione odwołanie, nazwanym jego ścieżką. Testy są niezależne,
+     * więc pierwszy brakujący zasób nie ucina sprawdzenia pozostałych — w raporcie widać komplet
+     * winowajców, każdego z osobna.
+     */
+    @TestFactory
+    Stream<DynamicTest> kazdyZasobZKoduJestWidocznyNaClasspath() throws IOException {
+        return skanujOdwolania().stream()
+                .map(odwolanie -> DynamicTest.dynamicTest(odwolanie, () ->
+                        // Ta sama operacja, której używa kod produkcyjny: getResource na klasie z modułu.
+                        assertThat(ResourcesTest.class.getResource(odwolanie))
+                                .as("Kod odwołuje się do tego zasobu, ale nie ma go na classpathie"
+                                        + " po zbudowaniu")
+                                .isNotNull()));
+    }
 
-        // Zbieramy WSZYSTKIE braki, zamiast przerywać na pierwszym — komunikat ma wymienić
-        // każdy zgubiony zasób, nie tylko ten, który wypadł najwcześniej.
-        List<String> brakujace = new ArrayList<>();
-        for (String odwolanie : odwolania) {
-            // Ta sama operacja, której używa kod produkcyjny: getResource na klasie z modułu.
-            if (ResourcesTest.class.getResource(odwolanie) == null) {
-                brakujace.add(odwolanie);
+    /**
+     * Kierunek odwrotny — po jednym teście na każdy zasób leżący na dysku, sprawdzającym, że kod
+     * w ogóle się do niego odwołuje. Wprost łapie pliki osierocone: takie, których nikt nie ładuje,
+     * a które i tak jadą do artefaktu i do obrazu jlink.
+     *
+     * <p>Ważniejsza jednak jest jego druga rola: <b>to strażnik samego skanera</b>. Gdy reguła
+     * ekstrakcji przestanie pasować do kodu, kierunek kod&rarr;zasób po cichu wyprodukuje mniej
+     * testów, wszystkie zielone. Ten zapali się wtedy na wszystkich zasobach naraz, bo pliki dalej
+     * leżą na dysku, a odwołań nagle brak. Cicha degradacja zamienia się w głośną czerwień.
+     *
+     * <p>Skutek uboczny, i to pożądany: nowa konwencja ładowania (np. {@code url(...)} w CSS)
+     * objawi się jako osierocony zasób, czyli sama poprosi o rozszerzenie skanera.
+     */
+    @TestFactory
+    Stream<DynamicTest> kazdyZasobNaDyskuJestUzywanyPrzezKod() throws IOException {
+        Set<String> odwolania = skanujOdwolania();
+        return zasobyNaDysku().stream()
+                .map(zasob -> DynamicTest.dynamicTest(zasob, () ->
+                        assertThat(odwolania)
+                                .as("Zasób leży w src/main/resources, ale żadne odwołanie w kodzie"
+                                        + " go nie wskazuje — plik osierocony albo konwencja"
+                                        + " ładowania, której skaner nie zna")
+                                .contains(zasob)));
+    }
+
+    /**
+     * Wszystko, co leży w katalogu zasobów, wyrażone jako ścieżki na classpathie. Bez filtrowania
+     * po rozszerzeniu: cokolwiek trafia do {@code src/main/resources}, trafia też do artefaktu
+     * i do obrazu jlink, więc podlega pytaniu „kto to ładuje".
+     */
+    private static Set<String> zasobyNaDysku() throws IOException {
+        Set<String> zasoby = new TreeSet<>();
+        try (Stream<Path> zawartosc = Files.walk(KATALOG_ZASOBOW)) {
+            List<Path> pliki = zawartosc
+                    .filter(Files::isRegularFile)
+                    .toList();
+            for (Path plik : pliki) {
+                zasoby.add(bazaDla(KATALOG_ZASOBOW, plik) + "/" + plik.getFileName());
             }
         }
-
-        assertThat(brakujace)
-                .as("Zasoby, do których odwołuje się kod, ale których nie ma na classpathie po"
-                        + " zbudowaniu. Skaner znalazł %d odwołań: %s", odwolania.size(), odwolania)
-                .isEmpty();
+        return zasoby;
     }
 
     /** Wszystkie odwołania do zasobów znalezione w kodzie Javy i w plikach FXML, bez duplikatów. */

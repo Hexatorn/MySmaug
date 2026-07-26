@@ -266,6 +266,34 @@ Granica sygnału zostaje skasowana świadomie. Uzasadnienie TestFX-a nie słabni
 *ładuje* (składnia, binding kontrolera, `initialize()` bez wyjątku) i czy nawigacja działa, czego skaner ścieżek
 nie dotyka. Kryterium 3.5 zostaje w mocy; 3.6 do potraktowania jako nieaktualne przy domykaniu Fazy 3.
 
+### Aneks (2026-07-26): smoke runnera usunięty, kryterium 1.5 spełnione dowodem zastępczym
+
+**Punkt 4 Fazy 1 unieważniony.** Przewidywał zachowanie `HarnessSpikeTest` jako stałego smoke'a runnera po zmianie
+nazwy i javadoca. Klasa została usunięta.
+
+**Powód:** smoke sprawdzał wyłącznie, czy działa biblioteka asercji (`assertThat(1 + 1).isEqualTo(2)`) — nie dotykał
+żadnego kodu projektu. Z chwilą, gdy `ResourcesTest` udowodnił na prawdziwej usterce zdolność do czerwieni, smoke
+przestał nieść sygnał, którego tamten by nie niósł. Test, który zawsze przechodzi i niczego nie sprawdza, jest
+kosztem uwagi bez przychodu.
+
+**Kryterium 1.5 spełnione dowodem zastępczym.** Wymagało zepsucia asercji smoke'a i obejrzenia `BUILD FAILURE`.
+Zamiast tego dowód wypadł sam, na realnej usterce: po rozszerzeniu skanera o kierunek zasób→kod plik
+`src/main/resources/CLAUDE.md` okazał się osierocony i zapalił test. Przebieg dał `Tests run: 15, Failures: 1`,
+`BUILD FAILURE`, kod wyjścia 1; po usunięciu przyczyny `Tests run: 14, BUILD SUCCESS`. Komplet: porażka łamie
+build, naprawa go przywraca.
+
+**Dlaczego dowód z innej klasy wystarcza.** Obie klasy dzieliły pakiet `hexatorn.mysmaug`, ten sam wpis `add-opens`
+w `module-info-patch.maven` i ten sam wzorzec nazwy `*Test` — awaria wykrywania uderzyłaby w obie identycznie.
+Czerwień `ResourcesTest` obala przy tym hipotezę „framework zawsze zwraca zielone" dla całego przebiegu, nie dla
+pojedynczej klasy.
+
+**Kryterium 1.5 jest odtąd nieodtwarzalne w literalnym brzmieniu** — nie ma czego psuć. Odhaczone na podstawie
+powyższego, nie przez pominięcie.
+
+**Do zapisania w Fazie 4 jako lekcja:** kanarek testujący sam framework traci rację bytu z chwilą pojawienia się
+pierwszego testu o realnym sygnale. Przy zakładaniu harnessu bywa uzasadniony, ale ma być usunięty, a nie
+utrzymywany z przyzwyczajenia.
+
 ---
 
 ## Phase 2: Dowód, że TestFX wstaje
@@ -536,9 +564,9 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Manual
 
-- [ ] 1.5 Bramka psucia A — fałszywa asercja smoke'a daje `BUILD FAILURE`, przywrócenie wraca do zielonego
-- [ ] 1.6 Bramka psucia B — zmiana nazwy pliku FXML zapala test zasobów z czytelnym komunikatem
-- [ ] 1.7 Testy uruchamiają się także z poziomu IntelliJ
+- [x] 1.5 Bramka psucia A — fałszywa asercja smoke'a daje `BUILD FAILURE`, przywrócenie wraca do zielonego
+- [x] 1.6 Bramka psucia B — zmiana nazwy pliku FXML zapala test zasobów z czytelnym komunikatem
+- [x] 1.7 Testy uruchamiają się także z poziomu IntelliJ
 
 ### Phase 2: Dowód, że TestFX wstaje
 
