@@ -64,6 +64,40 @@
             <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Testy widoków. 4.0.18 (luty 2024) to ostatnie wydanie i zarazem data ostatniego
+             commita w repozytorium TestFX — biblioteka jest w trybie utrzymaniowym, a oficjalnie
+             deklaruje wsparcie do JavaFX 21. Uruchomienie jej na JFX 25 / Java 23 / module-path
+             to główne ryzyko tej zmiany, dowodzone osobną fazą.
+             Bez openjfx-monocle: nie istnieje build dla Javy 23/JFX 25, więc testy wymagają
+             realnego ekranu. Headless odblokuje się dopiero przy JavaFX 26. -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-core</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Hamcresta nie używamy w kodzie ani razu — potrzebuje go KOMPILATOR. Metody
+             FxRobot.lookup i clickOn mają przeciążenia przyjmujące Matcher<Node>, więc żeby
+             rozstrzygnąć, który wariant wołamy, javac musi wczytać komplet sygnatur.
+             Przychodzi wprawdzie przechodnio z testfx-core, ale wtedy nie trafia na module-path:
+             zależności przechodnie lądują tam tylko z własnym module-info, a Hamcrest jest
+             modułem automatycznym (org.hamcrest, nazwa z Automatic-Module-Name). Deklaracja
+             bezpośrednia wciąga go do rozwinięcia TEST-MODULE-PATH i problem znika.
+             Wersja jak u TestFX, świadomie bez podnoszenia. -->
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>2.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -71,21 +105,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>4.0.0-beta-4</version>
+                <version>3.15.0</version>
                 <configuration>
                     <release>23</release>
                 </configuration>
             </plugin>
-            <!-- Runner testów przypięty jawnie. Bez tego Maven 4 dowiązuje własną wersję (3.5.2),
-                 która ciągnie rozjechaną linię JUnit Platform (engine 1.9.3 obok launchera 1.12.1),
-                 a kolejny upgrade Mavena mógłby po cichu zmienić runner.
-                 Bez <configuration> — przełącznik -DexcludedGroups=ui idzie właściwościami
-                 providera surefire-junit-platform; konfigurację dopisujemy dopiero, gdyby okazała
-                 się potrzebna. -->
+            <!-- Runner testów przypięty jawnie: domyślne wiązanie Mavena 3.9 to surefire 2.12.4,
+                 sprzed JUnit 5 — bez pinu testy nie wystartowałyby wcale. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.5</version>
+                <configuration>
+                    <!-- TestFX sięga refleksją do internals JavaFX (ParametersImpl) i w czasie testów
+                         działa w module nienazwanym — stąd ALL-UNNAMED. add-opens implikuje
+                         add-exports, więc jedna flaga gasi oba ostrzeżenia. -->
+                    <argLine>--add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.openjfx</groupId>

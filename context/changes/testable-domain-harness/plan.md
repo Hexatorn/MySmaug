@@ -360,6 +360,41 @@ jest jawnie tymczasowa — javadoc mówi, że znika w Fazie 3.
 **Implementation Note**: To jest faza-bramka. Nie zaczynaj Fazy 3, dopóki człowiek nie potwierdzi, że TestFX
 działa (albo że wchodzi fallback).
 
+### Aneks (2026-07-26): powrót na stabilnego Mavena, `module-info-patch.maven` usunięty
+
+**Zmiana:** Maven `4.0.0-rc-5` → **3.9.11**, `maven-compiler-plugin` `4.0.0-beta-4` → **3.15.0**,
+`src/test/java/module-info-patch.maven` usunięty. Decyzja użytkownika, podjęta w trakcie Fazy 2.
+
+**Powód.** Commit `0c6118c` podniósł Mavena do wydania przedprodukcyjnego wyłącznie po to, by uzyskać
+`module-info-patch.maven` — mechanizm flag modułowych dla testów. Eksperyment przeprowadzony w Fazie 2 wykazał, że
+**plik jest zbędny**: po tymczasowym wyłączeniu go build przechodził bez zmian. Dokumentacja to potwierdza —
+`maven-compiler-plugin` sam dodaje `--patch-module`, `--add-modules` i `--add-reads` do kompilacji testów, a
+surefire sam dokłada `--add-opens` dla modułu pod testem. Skoro jedyne uzasadnienie upadło, zostało samo ryzyko
+narzędzi przed wydaniem finalnym.
+
+**Dowód po zmianie:** `clean test` zielony, 14 testów, kompilacja testów nadal idzie **module-path**
+(`Compiling 2 source files with javac [debug release 23 module-path]`), TestFX zachowuje się identycznie.
+Wersja wtyczki **3.15.0**, nie pierwotna 3.13.0 — ta ostatnia nie zna formatu klas Javy 23
+(`Unsupported class file major version 67`).
+
+**Skutki uboczne, oba na plus:** gołe `mvn` znów działa dla tego repozytorium (wrapper przypina 3.9.11, czyli tę
+samą wersję, którą daje PATH — zgodność wrapper↔PATH z `0c6118c` zachowana), a ostrzeżenie o nieprzypiętych
+`maven-clean-plugin` i `maven-resources-plugin` zniknęło, bo było nowością Mavena 4.
+
+**Co to unieważnia w planie:**
+
+- **„Current State Analysis"** — opisy Mavena 4, `compiler` 4.x i `module-info-patch.maven` są nieaktualne.
+- **„Critical Implementation Details", mechanizm (1)** — dodatkowy blok `patch-module` dla flag TestFX jest
+  ślepą uliczką, i to z dwóch niezależnych powodów. Po pierwsze pliku już nie ma. Po drugie, nawet gdyby był,
+  surefire **nie czyta** generowanego z niego `META-INF/maven/module-info-patch.args` — zgłoszenie
+  apache/maven-surefire **#3345** (kwiecień 2026, otwarte) opisuje to wprost. Zostaje wyłącznie mechanizm (2),
+  czyli `<argLine>` w konfiguracji surefire.
+- **„Pakiety testowe wymagają jawnego `add-opens`"** — nieaktualne. Nowy pakiet testowy w Fazie 3 nie wymaga
+  żadnego wpisu; łatanie modułu obsługują wtyczki.
+
+**Do zapisania w Fazie 4 (§4 wersje):** Maven 3.9.11, `maven-compiler-plugin` 3.15.0, surefire 3.5.5,
+AssertJ 3.27.7, TestFX 4.0.18, Hamcrest 2.1.
+
 ---
 
 ## Phase 3: Wspólny bootstrap + testy shella
@@ -557,29 +592,29 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Automated
 
-- [x] 1.1 Pełny zestaw przechodzi: `./mvnw.cmd test`
-- [x] 1.2 Wyłącznik testów UI nie psuje builda: `./mvnw.cmd test -DexcludedGroups=ui`
-- [x] 1.3 Surefire działa w przypiętej wersji 3.5.5
-- [x] 1.4 Linia JUnit Platform jest spójna: `./mvnw.cmd dependency:tree`
+- [x] 1.1 Pełny zestaw przechodzi: `./mvnw.cmd test` — 48d2bb8
+- [x] 1.2 Wyłącznik testów UI nie psuje builda: `./mvnw.cmd test -DexcludedGroups=ui` — 48d2bb8
+- [x] 1.3 Surefire działa w przypiętej wersji 3.5.5 — 48d2bb8
+- [x] 1.4 Linia JUnit Platform jest spójna: `./mvnw.cmd dependency:tree` — 48d2bb8
 
 #### Manual
 
-- [x] 1.5 Bramka psucia A — fałszywa asercja smoke'a daje `BUILD FAILURE`, przywrócenie wraca do zielonego
-- [x] 1.6 Bramka psucia B — zmiana nazwy pliku FXML zapala test zasobów z czytelnym komunikatem
-- [x] 1.7 Testy uruchamiają się także z poziomu IntelliJ
+- [x] 1.5 Bramka psucia A — fałszywa asercja smoke'a daje `BUILD FAILURE`, przywrócenie wraca do zielonego — 48d2bb8
+- [x] 1.6 Bramka psucia B — zmiana nazwy pliku FXML zapala test zasobów z czytelnym komunikatem — 48d2bb8
+- [x] 1.7 Testy uruchamiają się także z poziomu IntelliJ — 48d2bb8
 
 ### Phase 2: Dowód, że TestFX wstaje
 
 #### Automated
 
-- [ ] 2.1 Pełny zestaw przechodzi z testem UI: `./mvnw.cmd test`
-- [ ] 2.2 Wyłącznik realnie pomija test UI (niższe `Tests run`)
+- [x] 2.1 Pełny zestaw przechodzi z testem UI: `./mvnw.cmd test`
+- [x] 2.2 Wyłącznik realnie pomija test UI (niższe `Tests run`)
 
 #### Manual
 
-- [ ] 2.3 Podczas przebiegu na ekranie pojawia się okno testowe
-- [ ] 2.4 Bramka psucia — zła oczekiwana wartość zapala test z czytelnym komunikatem
-- [ ] 2.5 Bramka decyzyjna — TestFX działa albo świadomie wchodzi fallback (zapisany w `change.md`)
+- [x] 2.3 Podczas przebiegu na ekranie pojawia się okno testowe
+- [x] 2.4 Bramka psucia — zła oczekiwana wartość zapala test z czytelnym komunikatem
+- [x] 2.5 Bramka decyzyjna — TestFX działa albo świadomie wchodzi fallback (zapisany w `change.md`)
 
 ### Phase 3: Wspólny bootstrap + testy shella
 
