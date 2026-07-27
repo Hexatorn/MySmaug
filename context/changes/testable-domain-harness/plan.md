@@ -691,16 +691,16 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Automated
 
-- [x] 3.1 Pełny zestaw przechodzi: `./mvnw.cmd test`
-- [x] 3.2 Zestaw bez UI przechodzi: `./mvnw.cmd test -DexcludedGroups=ui`
-- [x] 3.3 Kod produkcyjny się kompiluje: `./mvnw.cmd compile`
+- [x] 3.1 Pełny zestaw przechodzi: `./mvnw.cmd test` — 621e60f
+- [x] 3.2 Zestaw bez UI przechodzi: `./mvnw.cmd test -DexcludedGroups=ui` — 621e60f
+- [x] 3.3 Kod produkcyjny się kompiluje: `./mvnw.cmd compile` — 621e60f
 
 #### Manual
 
-- [x] 3.4 Brak regresji — `./mvnw.cmd javafx:run` zachowuje chrome, motyw, drag, resize i przełączanie
-- [x] 3.5 Bramka psucia — zła ścieżka w `Section` zapala testy shella komunikatem `Brak zasobu FXML: ...`
-- [x] 3.6 Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony
-- [x] 3.7 Testy TestFX przechodzą powtarzalnie (co najmniej dwa przebiegi pod rząd)
+- [x] 3.4 Brak regresji — `./mvnw.cmd javafx:run` zachowuje chrome, motyw, drag, resize i przełączanie — 621e60f
+- [x] 3.5 Bramka psucia — zła ścieżka w `Section` zapala testy shella komunikatem `Brak zasobu FXML: ...` — 621e60f
+- [x] 3.6 Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony — 621e60f
+- [x] 3.7 Testy TestFX przechodzą powtarzalnie (co najmniej dwa przebiegi pod rząd) — 621e60f
 
 ### Phase 4: Utrwalenie konwencji
 

@@ -3,7 +3,7 @@ change_id: testable-domain-harness
 title: Testable domain harness
 status: implementing
 created: 2026-06-22
-updated: 2026-07-26
+updated: 2026-07-27
 archived_at: null
 ---
 
