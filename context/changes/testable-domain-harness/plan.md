@@ -470,6 +470,77 @@ Lokalizuj kontrolki po `fx:id` / etykiecie tekstowej, nie po strukturze drzewa. 
 **Implementation Note**: Po tej fazie zatrzymaj się na potwierdzenie, że aplikacja uruchomiona ręcznie nie ma
 regresji — to jedyna faza modyfikująca `main`.
 
+### Aneks (2026-07-27): konfiguracja okna też we wspólnym punkcie, wykluczenie OSGi, werdykt o `setAlwaysOnTop`
+
+**1. `start()` rozbity na dwa punkty, nie jeden.** Punkt 1 kontraktu przewidywał jeden wspólny punkt zwracający
+`Scene` i zostawiał konfigurację poziomu okna (`UNDECORATED`, tytuł, ikona, `WindowResizeHelper`) w `start()`.
+Zamiast tego powstały dwie statyczne metody: `createShellScene()` (FXML + wstrzyknięty `ThemeManager`) oraz
+`configureStage(Stage, Scene)` (chrome okna). Test woła obie.
+
+**Powód:** rozdział scena↔okno z kontraktu zostaje zachowany — zmienia się tylko to, że drugi kawałek również
+jest wołany z testu, żeby okno w teście powstawało dokładnie tak, jak u użytkownika. Zakres asercji się przy tym
+nie rozszerzył: testy nadal nie dotykają motywu, maksymalizacji ani przeciągania paska tytułu, czyli wykluczeń
+z „What We're NOT Doing".
+
+**Cena: strażnik idempotencji przy `initStyle`.** JavaFX zabrania zmiany stylu okna po pierwszym pokazaniu, a
+TestFX woła `@Start` osobno dla każdego testu na tym samym `Stage`. Stąd warunek
+`if (stage.getStyle() != StageStyle.UNDECORATED)` — bez niego drugi test w klasie padłby przy ponownym
+ustawianiu stylu.
+
+**2. TestFX ciągnie OSGi, OSGi psuje Ikonli.** `testfx-core` wnosi tranzytywnie `org.osgi:org.osgi.core`. Ikonli
+wykrywa obecność OSGi sięgając po `FrameworkUtil` i przy braku klasy schodzi na zwykłe rozwiązywanie ikon; gdy
+klasa jest na classpathie, moduł `ikonli.core` nie ma prawa jej czytać i dostaje `IllegalAccessError` zamiast
+spodziewanego braku klasy — ścieżka zapasowa nie łapie. Objaw: `FontIcon` nie ładuje się z FXML-a, czyli shell
+nie wstaje w teście, choć w produkcji wstaje bez zarzutu. Rozwiązanie: `<exclusion>` w `pom.xml`, przywracające
+w testach warunki produkcyjne.
+
+**3. Kryterium 3.6 odhaczone jako nieaktualne.** Aneks Fazy 1 (skaner zasobów) unieważnił je wprost: pod
+skanerem zła ścieżka w `MainController.Section` zapala **także** test zasobów, więc granica sygnału, którą 3.6
+miało obserwować, już nie istnieje. Odhaczone na tej podstawie, nie przez pominięcie — analogicznie do 1.5.
+
+**4. `setAlwaysOnTop` niepotrzebny — winna była padnięta sesja MCP `ide`.** W trakcie fazy test nawigacji padał
+17 razy na 20, a po dołożeniu `stage.setAlwaysOnTop(true)` przechodził 50 na 50. Przyczyną nie był ani TestFX,
+ani kod testu, tylko rozłączony serwer MCP `ide`. Prawdopodobny mechanizm: przy żywym połączeniu IntelliJ usuwa
+się w tło na czas testu widoków i odsłania okno testowe; po rozłączeniu nie dostaje takiego impulsu, zostaje na
+wierzchu i przejmuje kliknięcia robota.
+
+Zgodność z obserwacjami jest pełna: połączenie padnięte → 17/20 czerwonych; połączenie przywrócone i maszyna
+bezczynna → **41 przebiegów na 41 zielonych** bez flagi; połączenie żywe, ale przy równoczesnej pracy w IntelliJ
+(okno wraca na wierzch) → czerwień na pierwszym przebiegu.
+
+**Dlatego flaga zostaje usunięta.** Broniłaby wyłącznie przed złamaniem warunku, który plan i tak stawia wprost
+(„Testy TestFX wymagają realnej sesji graficznej… Nie uruchamiaj ich w tle podczas innej pracy na maszynie"),
+a jej koszt jest trwały — obejście w kodzie przeżywa problem, który obchodzi. W `ShellTest.start()` zostaje
+`show()` + `toFront()` z komentarzem o tym, że robot klika w to, co jest na wierzchu ekranu.
+
+**Do zapisania w Fazie 4 (§6.3) jako warunek uruchomienia:** żywa sesja `ide` plus nietknięta maszyna przez czas
+przebiegu. Sama lekcja jest już w `lessons.md` („Padnięta sesja MCP `ide` czyni testy widoków flaky").
+
+**5. Uwaga o pakiecie nieaktualna.** Punkt 3 kontraktu kazał dopisać `add-opens` dla `hexatorn.mysmaug.controller`
+w `module-info-patch.maven`. Plik nie istnieje od aneksu Fazy 2, a wpis okazał się zbędny — testy w nowym pakiecie
+są widoczne w raporcie bez żadnej konfiguracji (`Tests run: 2 ... in hexatorn.mysmaug.controller.ShellTest`).
+
+**6. Komunikat guardu wyciągnięty do porażki testu (dotyczy kryterium 3.5).** Zła ścieżka w `Section` rzuca
+`NullPointerException: Brak zasobu FXML: ...` na wątku JavaFX, wewnątrz handlera przycisku — wyjątek nie dociera
+więc do wątku testu. W pierwszym przebiegu bramki test padał dopiero na dalszej asercji („Klik w Podsumowania nie
+podmienił widoku w centrum"), a przyczyna leżała w osobnym zrzucie TestFX, pośrodku wyjścia builda. Sygnał był,
+ale nie tam, gdzie się go szuka.
+
+**Poprawione w `ShellTest`:** `klik()` po barierze zdarzeń woła `WaitForAsyncUtils.checkException()`, a złapany
+wyjątek zamienia na `AssertionError` z komunikatem „co się nie stało" plus opisem przyczyny źródłowej (zejście
+po `getCause()` do korzenia — warstwy pośrednie typu `InvocationTargetException` nic nie wnoszą); oryginalny
+wyjątek zostaje jako `cause`. Dodatkowo `@BeforeAll` wyłącza `WaitForAsyncUtils.printException`, bo odkąd wyjątek
+raportujemy sami, surowy zrzut jest duplikatem spychającym właściwy komunikat w środek wyjścia.
+
+**Efekt:** pierwsza linia porażki i jednolinijkowe podsumowanie surefire brzmią `Klik w #btnPodsumowania nie
+doszedł do skutku: java.lang.NullPointerException: Brak zasobu FXML: view/summary-viewX.fxml`, a test pada
+w miejscu kliknięcia zamiast kilka asercji dalej. **Do §6.3 w Fazie 4:** wyjątki z handlerów w testach TestFX
+trzeba wyciągać jawnie, inaczej test raportuje objaw zamiast przyczyny.
+
+**7. Do Fazy 4: kodowanie wyjścia surefire.** Polskie znaki w komunikatach asercji rozsypują się w konsoli
+(`doszed�`) — to kodowanie strumienia na Windows, nie kod testu. Psuje czytelność, o którą walczy cała ta faza,
+ale jest osobną, konfiguracyjną drobnicą; świadomie poza zakresem Fazy 3.
+
 ---
 
 ## Phase 4: Utrwalenie konwencji
@@ -607,29 +678,29 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Automated
 
-- [x] 2.1 Pełny zestaw przechodzi z testem UI: `./mvnw.cmd test`
-- [x] 2.2 Wyłącznik realnie pomija test UI (niższe `Tests run`)
+- [x] 2.1 Pełny zestaw przechodzi z testem UI: `./mvnw.cmd test` — 88a6003
+- [x] 2.2 Wyłącznik realnie pomija test UI (niższe `Tests run`) — 88a6003
 
 #### Manual
 
-- [x] 2.3 Podczas przebiegu na ekranie pojawia się okno testowe
-- [x] 2.4 Bramka psucia — zła oczekiwana wartość zapala test z czytelnym komunikatem
-- [x] 2.5 Bramka decyzyjna — TestFX działa albo świadomie wchodzi fallback (zapisany w `change.md`)
+- [x] 2.3 Podczas przebiegu na ekranie pojawia się okno testowe — 88a6003
+- [x] 2.4 Bramka psucia — zła oczekiwana wartość zapala test z czytelnym komunikatem — 88a6003
+- [x] 2.5 Bramka decyzyjna — TestFX działa albo świadomie wchodzi fallback (zapisany w `change.md`) — 88a6003
 
 ### Phase 3: Wspólny bootstrap + testy shella
 
 #### Automated
 
-- [ ] 3.1 Pełny zestaw przechodzi: `./mvnw.cmd test`
-- [ ] 3.2 Zestaw bez UI przechodzi: `./mvnw.cmd test -DexcludedGroups=ui`
-- [ ] 3.3 Kod produkcyjny się kompiluje: `./mvnw.cmd compile`
+- [x] 3.1 Pełny zestaw przechodzi: `./mvnw.cmd test`
+- [x] 3.2 Zestaw bez UI przechodzi: `./mvnw.cmd test -DexcludedGroups=ui`
+- [x] 3.3 Kod produkcyjny się kompiluje: `./mvnw.cmd compile`
 
 #### Manual
 
-- [ ] 3.4 Brak regresji — `./mvnw.cmd javafx:run` zachowuje chrome, motyw, drag, resize i przełączanie
-- [ ] 3.5 Bramka psucia — zła ścieżka w `Section` zapala testy shella komunikatem `Brak zasobu FXML: ...`
-- [ ] 3.6 Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony
-- [ ] 3.7 Testy TestFX przechodzą powtarzalnie (co najmniej dwa przebiegi pod rząd)
+- [x] 3.4 Brak regresji — `./mvnw.cmd javafx:run` zachowuje chrome, motyw, drag, resize i przełączanie
+- [x] 3.5 Bramka psucia — zła ścieżka w `Section` zapala testy shella komunikatem `Brak zasobu FXML: ...`
+- [x] 3.6 Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony
+- [x] 3.7 Testy TestFX przechodzą powtarzalnie (co najmniej dwa przebiegi pod rząd)
 
 ### Phase 4: Utrwalenie konwencji
 

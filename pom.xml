@@ -76,6 +76,17 @@
             <artifactId>testfx-core</artifactId>
             <version>4.0.18</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- OSGi psuje Ikonli w testach. Ikonli wykrywa OSGi sięgając po FrameworkUtil
+                     i przy braku klasy schodzi na zwykłe rozwiązywanie ikon. Gdy TestFX wciągnie
+                     tę klasę na classpath, moduł ikonli.core nie ma prawa jej czytać i dostaje
+                     IllegalAccessError zamiast spodziewanego braku klasy — ścieżka zapasowa nie
+                     łapie. Wykluczenie przywraca w testach warunki produkcyjne. -->
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.testfx</groupId>
