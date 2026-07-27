@@ -736,11 +736,11 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Automated
 
-- [x] 4.1 Brak `TBD` w `test-plan.md` §6.1 i §6.3
-- [x] 4.2 Zestaw nadal zielony po zmianach dokumentacyjnych: `./mvnw.cmd test`
+- [x] 4.1 Brak `TBD` w `test-plan.md` §6.1 i §6.3 — 32f57fc
+- [x] 4.2 Zestaw nadal zielony po zmianach dokumentacyjnych: `./mvnw.cmd test` — 32f57fc
 
 #### Manual
 
-- [x] 4.3 Przepisy §6.1 i §6.3 wystarczają do napisania nowego testu bez sięgania do tej rozmowy
-- [x] 4.4 Wersje w §4 zgadzają się z `pom.xml`
-- [x] 4.5 Lekcja w `lessons.md` trzyma format pozostałych wpisów
+- [x] 4.3 Przepisy §6.1 i §6.3 wystarczają do napisania nowego testu bez sięgania do tej rozmowy — 32f57fc
+- [x] 4.4 Wersje w §4 zgadzają się z `pom.xml` — 32f57fc
+- [x] 4.5 Lekcja w `lessons.md` trzyma format pozostałych wpisów — 32f57fc
