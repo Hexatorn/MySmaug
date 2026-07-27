@@ -108,10 +108,10 @@ oglądamy czerwień i komunikat, przywracamy. W Fazie 3 ten przebieg ma dodatkow
 
 **Granica sygnału testu zasobów vs TestFX.** Dwa scenariusze psucia dają różny wynik i to jest zamierzone:
 
-| Co psujesz | Test zasobów (JUnit) | TestFX |
-|---|---|---|
-| Nazwa **pliku na dysku** (`entry-view.fxml` → `entry-viewX.fxml`) | 🔴 czerwony | 🔴 czerwony |
-| Ścieżka **w kodzie**, w `MainController.Section` | 🟢 **zielony** — plik nadal istnieje | 🔴 czerwony |
+| Co psujesz                                                        | Test zasobów (JUnit)                 | TestFX      |
+|-------------------------------------------------------------------|--------------------------------------|-------------|
+| Nazwa **pliku na dysku** (`entry-view.fxml` → `entry-viewX.fxml`) | 🔴 czerwony                          | 🔴 czerwony |
+| Ścieżka **w kodzie**, w `MainController.Section`                  | 🟢 **zielony** — plik nadal istnieje | 🔴 czerwony |
 
 Test zasobów weryfikuje, że pliki są tam, gdzie mają być — **nie** że kod celuje we właściwe. Nie „naprawiaj"
 tego, sprzęgając test z prywatnym `enum Section`; ta granica ma być widoczna, bo to ona uzasadnia koszt TestFX.
@@ -606,6 +606,36 @@ konkrecie z tej zmiany — w tym na granicy sygnału, gdzie test zasobów zostaj
 - Wersje w §4 zgadzają się z `pom.xml`
 - Lekcja w `lessons.md` trzyma format pozostałych wpisów
 
+### Aneks (2026-07-27): test-first domyślnie, deliberate-break schodzi do roli zapasowej
+
+**Decyzja użytkownika podjęta w trakcie Fazy 4.** Kontrakt tej fazy przewidywał spisanie konwencji wypracowanej
+w Fazach 1-3 — a tam testy powstawały **po** kodzie, bo shell z F-05 istniał wcześniej. Konwencja zostaje przy
+okazji utrwalania **zmieniona**: domyślną kolejnością jest `czerwony test → implementacja → zielony test`.
+Test po implementacji pozostaje dopuszczalny wyłącznie jako jawna decyzja zapisana w planie zmiany albo gdy
+potrzeba dodatkowego testu ujawni się dopiero w trakcie implementacji.
+
+**Powód:** test napisany przed kodem dowodzi zdolności do czerwieni za darmo — czerwień bierze się z braku
+implementacji, więc nie trzeba jej potem inscenizować. Bramka psucia, która w Fazach 1-3 była osobnym, ręcznym
+krokiem, staje się produktem ubocznym przebiegu pracy.
+
+**Gdzie to wylądowało:**
+
+- `test-plan.md` §1 — czwarta zasada „Test-first domyślnie", wraz z warunkami dopuszczającymi test po kodzie.
+- `test-plan.md` §6 (wstęp) — driverem planu jest odtąd `/10x-tdd`; `/10x-implement` zostaje dla faz nie do
+  poprowadzenia test-first (dokumentacja, konfiguracja, refactor bez zmiany zachowania).
+- `test-plan.md` §6.1 i §6.3 — bramka gotowości rozdzielona na dwie drogi, z notą, że w Javie błąd kompilacji
+  nie jest czerwonym testem, oraz z zastrzeżeniem, że dla testów wyprowadzanych z kodu inscenizacja obowiązuje
+  zawsze.
+- `lessons.md` — lekcja o deliberate-break przepisana: test-first na czele reguły, inscenizacja jako droga
+  zapasowa.
+
+**Czego to NIE unieważnia.** Dowodu z Faz 1-3. Tamte testy przeszły inscenizowaną czerwień na realnych usterkach
+i ta droga pozostaje ważna — jest teraz drogą zapasową, nie drogą błędną. Nie ma powodu ich przepisywać.
+
+**Bez skutków dla kodu.** Zmiana dotyczy wyłącznie dokumentów fundamentu; zestaw testów pozostaje nietknięty
+(15 testów, `BUILD SUCCESS`). Kryteria 4.1-4.5 zostają w mocy bez zmian — 4.3 („przepisy wystarczają do napisania
+nowego testu") pokrywa także nową, dwudrożną bramkę.
+
 ---
 
 ## Testing Strategy
@@ -706,11 +736,11 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Automated
 
-- [ ] 4.1 Brak `TBD` w `test-plan.md` §6.1 i §6.3
-- [ ] 4.2 Zestaw nadal zielony po zmianach dokumentacyjnych: `./mvnw.cmd test`
+- [x] 4.1 Brak `TBD` w `test-plan.md` §6.1 i §6.3
+- [x] 4.2 Zestaw nadal zielony po zmianach dokumentacyjnych: `./mvnw.cmd test`
 
 #### Manual
 
-- [ ] 4.3 Przepisy §6.1 i §6.3 wystarczają do napisania nowego testu bez sięgania do tej rozmowy
-- [ ] 4.4 Wersje w §4 zgadzają się z `pom.xml`
-- [ ] 4.5 Lekcja w `lessons.md` trzyma format pozostałych wpisów
+- [x] 4.3 Przepisy §6.1 i §6.3 wystarczają do napisania nowego testu bez sięgania do tej rozmowy
+- [x] 4.4 Wersje w §4 zgadzają się z `pom.xml`
+- [x] 4.5 Lekcja w `lessons.md` trzyma format pozostałych wpisów

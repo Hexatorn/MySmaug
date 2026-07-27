@@ -6,11 +6,11 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-23
+> Last updated: 2026-07-27
 
 ## 1. Strategy
 
-Testy w tym projekcie podlegają trzem nienegocjowalnym zasadom:
+Testy w tym projekcie podlegają czterem nienegocjowalnym zasadom:
 
 1. **Cost × signal.** Wygrywa najtańszy test, który daje realny sygnał dla
    ryzyka. Nie promuj do e2e/TestFX dlatego, że „czuje się bezpieczniej".
@@ -25,6 +25,16 @@ Testy w tym projekcie podlegają trzem nienegocjowalnym zasadom:
    która linia jest źródłem awarii. Tę wiedzę produkuje `/10x-research` w
    każdej fazie rolloutu. Jeśli plan i research nie zgadzają się co do
    miejsca awarii — ground truth jest research.
+4. **Test-first domyślnie.** Kolejność to **czerwony test → implementacja →
+   zielony test**. Test napisany przed kodem dowodzi swojej zdolności do
+   czerwieni za darmo — czerwień bierze się z braku implementacji, więc nie
+   trzeba jej potem inscenizować. Przy okazji wymusza projektowanie od strony
+   kontraktu, nie od strony tego, co akurat wyszło.
+   Test **po** implementacji jest dopuszczalny wyłącznie jako **jawna decyzja**
+   (zapisana w planie zmiany) albo gdy potrzeba dodatkowego testu ujawni się
+   dopiero w trakcie implementacji. „Nie chciało mi się zaczynać od testu" nie
+   jest jawną decyzją. Ta droga płaci wtedy cenę opisaną w §6.1: czerwień
+   trzeba dowieść osobno, psując realną rzecz.
 
 Hot-spot scope użyty do ważenia likelihood: `src/` (wykluczone `target/`,
 `context/`, docs).
@@ -78,12 +88,22 @@ Status, gdy artefakty pojawiają się na dysku.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Harness + ziarno domeny | Runner działa (surefire `useModulePath=false`); 1 zielony test na prymitywie agregacji/pieniądza; domena oddzielona od wątku FX | #1 (seed), #5 | unit (JUnit5 + opc. AssertJ) | researched | context/changes/testable-domain-harness/ |
-| 2 | Testy nawigacji na atrapach | TestFX na istniejącym shellu (F-05): przełączanie widoków i load atrap bez wyjątku, na realnym ekranie | #4 | TestFX + smoke toolkit-boot | not started | — |
+| 1 | Harness + ziarno domeny | Runner przypięty (surefire 3.5.5; testy idą **module-path**, nie classpath); test zasobów wyprowadzany ze skanera, z dowiedzionym sygnałem; konwencja w §6.1. **Ziarno domeny nie powstało** — patrz nota pod tabelą | #4 (częściowo) | unit (JUnit 5 + AssertJ) | done | context/changes/testable-domain-harness/ |
+| 2 | Testy nawigacji na atrapach | TestFX 4.0.18 wstaje na JFX 25 / Java 23 / module-path; smoke shella + przełączanie 3 sekcji na realnym ekranie; konwencja w §6.3 | #4 | TestFX + smoke toolkit-boot | done | context/changes/testable-domain-harness/ (scalona z Fazą 1) |
 | 3 | Poprawność agregacji | Sumy per kategoria/okres = ręczny oracle; soft-delete wykluczone; uncategorized wg PRD Open Q#1 | #1, #2 | unit + integration | not started | — |
 | 4 | Durability persystencji | Tx przeżywa restart; przerwany zapis bez korupcji; diakrytyki round-trip | #3, #6 | integration (SQLite) | not started | — |
 | 5 | Testy realnych widoków | TestFX + smoke na realnych widokach (transakcja, podsumowania) po S-01 | #4 (rozszerza) | TestFX + smoke toolkit-boot | not started | — |
 | 6 | Bramki jakości | `mvn test` jako twarda bramka; post-edit hook (recommended local); CI odroczone | cross-cutting | gates | not started | — |
+
+**Fazy 1 i 2 zostały scalone.** Obie wylądowały w jednej zmianie `testable-domain-harness`
+(kontrakt F-01), commity `48d2bb8`, `88a6003`, `621e60f`. Powód: TestFX na JFX 25 było jedyną
+realną niewiadomą harnessu i musiało zostać dowiedzione, zanim harness dało się uznać za gotowy.
+Rozdzielanie tego na osobną zmianę odkładałoby dowód, nie zmniejszając ryzyka.
+
+**Ziarno domeny wypadło z Fazy 1.** Plan F-01 ustalił, że w repo nie istnieje ani jeden kawałek
+logiki bez JavaFX (`ThemeManager` bierze `Scene` w konstruktorze), więc test na prymitywie
+agregacji nie miałby czego pokrywać — a atrapa modelu wyprzedzałaby decyzje S-01. Skutek: ryzyka
+**#1 (seed)** i **#5** zostają **bez pokrycia** aż do S-01; adresuje je Faza 3 rolloutu.
 
 ## 4. Stack
 
@@ -93,9 +113,13 @@ re-weryfikacji.
 
 | Layer | Tool | Version | Notes |
 |---|---|---|---|
-| unit + integration | JUnit Jupiter | 5.12.1 | wpięty w `pom.xml`; **brak `maven-surefire-plugin`** — dokłada Faza 1 (`useModulePath=false`, testy na classpath) |
-| czytelne asercje | AssertJ (`assertj-core`) | 3.27.x | opcjonalnie od Fazy 1; zostać na 3.x (4.x flagowane jako niekompatybilne z Java 25) |
-| testy UI/nawigacji | TestFX (`testfx-junit5`) | 4.0.18 | first-class od Fazy 2; **real screen (Windows-local)**; wymaga `--add-opens` na argLine testów, NIE w produkcyjnym `module-info` |
+| runner testów | `maven-surefire-plugin` | 3.5.5 | przypięty jawnie; domyślne wiązanie Mavena 3.9 to surefire 2.12.4, sprzed JUnit 5 — bez pinu testy nie wystartowałyby wcale |
+| unit + integration | JUnit Jupiter | 5.12.1 | wpięty w `pom.xml`; testy idą **module-path**, nie classpath. Łatanie modułu obsługują wtyczki — nowy pakiet testowy nie wymaga żadnego wpisu |
+| czytelne asercje | AssertJ (`assertj-core`) | 3.27.7 | **obowiązkowy** od Fazy 1 — jeden styl `assertThat(...)` w obu warstwach; zostać na 3.x (4.x flagowane jako niekompatybilne z Java 25) |
+| testy UI/nawigacji | TestFX (`testfx-core`, `testfx-junit5`) | 4.0.18 | **real screen (Windows-local)**; wymaga `--add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED` w `<argLine>` surefire (NIE w produkcyjnym `module-info`) oraz `<exclusion>` na `org.osgi:org.osgi.core` — bez niej Ikonli pada z `IllegalAccessError` i shell nie wstaje w teście |
+| kompilacja testów | Hamcrest | 2.1 | zadeklarowany bezpośrednio, choć nieużywany w kodzie — javac potrzebuje kompletu sygnatur, by rozstrzygnąć przeciążenia `FxRobot.lookup`/`clickOn`. Przechodnio z TestFX nie trafia na module-path (moduł automatyczny) |
+| build | Maven (przez wrapper) | 3.9.11 | `./mvnw.cmd`; gołe `mvn` również działa — wrapper przypina tę samą wersję, którą daje PATH. Maven 4.0.0-rc-5 wycofany w Fazie 2 wraz z `module-info-patch.maven` |
+| kompilator | `maven-compiler-plugin` | 3.15.0 | `release` 23; wersja 3.13.0 nie zna formatu klas Javy 23 (`Unsupported class file major version 67`) |
 | headless UI (CI) | Monocle / JFX Headless | — | **niemożliwe na JFX 25** (brak buildu Monocle dla Javy 23/JFX 25); odblokuje JavaFX 26 — patrz §7 i §8 |
 | mocking | Mockito | 5.20.x | dopiero gdy pojawi się collaborator do zamockowania (nie w Fazie 1) |
 | e2e | none yet | — | desktop single-process; brak warstwy e2e — TestFX pokrywa interakcję UI |
@@ -127,9 +151,89 @@ wyląduje; wcześniej jest `planned`.
 Jak dodawać nowe testy w tym projekcie. Każda podsekcja wypełnia się, gdy
 odpowiednia faza rolloutu wyląduje; wcześniej brzmi „TBD — see §3 Phase <N>".
 
+**Czym prowadzić pracę.** Domyślnym driverem planu jest **`/10x-tdd`** — realizuje
+zasadę #4 (§1) wprost, fazami czerwony → zielony → refactor. `/10x-implement`
+zostaje dla faz, których nie da się poprowadzić test-first: dokumentacja,
+konfiguracja, refactor bez zmiany zachowania, a także fazy, w których plan **jawnie
+zadeklarował** test po implementacji. Wybór drivera nie jest kwestią wygody: jeśli
+sięgasz po `/10x-implement` dla fazy dowożącej zachowanie, to jest ta jawna decyzja
+z zasady #4 i ma trafić do planu wraz z powodem.
+
 ### 6.1 Dodanie testu jednostkowego (unit)
 
-- TBD — see §3 Phase 1 (harness + pierwszy test agregacji/pieniądza).
+Przepis ustalony w F-01 (`context/changes/testable-domain-harness/`).
+Przykład referencyjny: `src/test/java/hexatorn/mysmaug/ResourcesTest.java`.
+
+**Gdzie i jak nazwać**
+
+- Plik w `src/test/java/`, w pakiecie lustrzanym do testowanego kodu
+  (`hexatorn.mysmaug.controller` → `src/test/java/hexatorn/mysmaug/controller/`).
+- Nazwa klasy kończy się na `Test` — tylko taki wzorzec surefire wykrywa.
+- Klasa i metody package-private (bez `public`) — JUnit 5 tego nie wymaga.
+- Nowy pakiet testowy **nie wymaga żadnej konfiguracji modułowej**. Testy idą
+  module-path: `--patch-module`/`--add-modules`/`--add-reads` dokłada
+  `maven-compiler-plugin`, a `--add-opens` dla modułu pod testem — surefire
+  (zweryfikowane w F-01 Fazie 3: testy w nowym pakiecie widoczne bez żadnego wpisu).
+
+**Asercje**
+
+- Wyłącznie AssertJ: `assertThat(...)`. Nie mieszaj z `Assertions` z JUnit ani
+  z Hamcrestem — TestFX (§6.3) wystawia API zbudowane na AssertJ, więc jeden styl
+  obowiązuje w obu warstwach.
+- Każda asercja dostaje `.as("...")` mówiące **co się nie stało**, nie co było
+  oczekiwane. Ten opis jest pierwszą linią porażki i zwykle jedyną, którą ktoś
+  przeczyta. Po polsku, jak reszta projektu.
+
+**Zero JavaFX**
+
+- Bez `@Tag("ui")` i bez startowania toolkitu. Jeśli testu nie da się napisać bez
+  zbootowania FX, to sygnał sprzężenia (ryzyko #5), nie konieczność — rozdziel kod,
+  nie promuj testu do §6.3.
+
+**Wiele przypadków z jednego źródła**
+
+- `@TestFactory` zwracająca `Stream<DynamicTest>`, każdy przypadek nazwany swoimi
+  danymi wejściowymi (w `ResourcesTest`: ścieżką zasobu). Zysk: winowajca stoi
+  w nazwie testu, przypadki są niezależne (pierwszy błąd nie ucina reszty), a liczba
+  w raporcie odpowiada realnemu pokryciu. Bez nowej zależności — `DynamicTest`
+  należy do `junit-jupiter-api`.
+
+**Test wyprowadzany z kodu wymaga podłóg**
+
+- Test, który sam odkrywa, co ma sprawdzić (skan źródeł, refleksja, katalog
+  fixture), po zmianie konwencji znajdzie zero rzeczy i **przejdzie na zielono** —
+  to samo zdarzenie, które wprowadza ryzyko, wyłącza jego wykrywanie. Dołóż podłogi:
+  katalogi wejściowe muszą istnieć, znalezisk musi być co najmniej tyle-a-tyle,
+  a jeśli to możliwe — drugi kierunek sprawdzenia, który zapala się właśnie wtedy,
+  gdy pierwszy przestaje cokolwiek widzieć (w `ResourcesTest`: kod→zasób obok
+  zasób→kod).
+
+**Bramka gotowości (nienegocjowalna)**
+
+- Test jest gotowy dopiero wtedy, gdy **widziałeś go czerwonego** — z komunikatem
+  nazywającym winowajcę — i zielonego po naprawie. Skąd bierze się ta czerwień,
+  zależy od drogi (§1 zasada #4):
+  - **test-first** (domyślnie): czerwień przychodzi sama, z braku implementacji.
+    Nic nie inscenizujesz — ale **przeczytaj komunikat porażki**, zanim napiszesz
+    kod. W Javie pierwszy przebieg często kończy się błędem kompilacji („metoda nie
+    istnieje"), a to nie jest czerwony test, tylko brak kodu. Dowodem sygnału jest
+    dopiero porażka **asercji**: „wynik się nie zgadza". Dopisz minimalną atrapę,
+    żeby się skompilowało, i zobacz tę porażkę.
+  - **test po implementacji** (jawna decyzja albo potrzeba wykryta w trakcie): kod
+    już działa, więc czerwień trzeba **zainscenizować** — zepsuj realną rzecz, którą
+    test ma chronić (usuń plik, podmień ścieżkę), zobacz czerwień, przywróć.
+- Dla testów **wyprowadzanych z kodu** deliberate-break obowiązuje **zawsze**, także
+  pod test-first: taki test potrafi przejść na zielono nie sprawdzając niczego, więc
+  sama czerwień z braku implementacji nie dowodzi, że pokrycie nie zniknie później
+  (patrz „Test wyprowadzany z kodu wymaga podłóg" wyżej).
+- Uzasadnienie i pełna reguła: `context/foundation/lessons.md`.
+
+**Uruchomienie**
+
+- `./mvnw.cmd test` — pełny zestaw. Gołe `mvn test` też działa: wrapper przypina
+  3.9.11, czyli tę samą wersję, którą daje PATH.
+- `./mvnw.cmd test -DexcludedGroups=ui` — bez testów wymagających ekranu; to
+  komenda dla pętli „edytuj → sprawdź".
 
 ### 6.2 Dodanie testu integracyjnego
 
@@ -137,7 +241,87 @@ odpowiednia faza rolloutu wyląduje; wcześniej brzmi „TBD — see §3 Phase <
 
 ### 6.3 Dodanie testu UI / nawigacji (TestFX)
 
-- TBD — see §3 Phase 2 (przełączanie widoków na atrapach) i Phase 5 (realne widoki).
+Przepis ustalony w F-01 (`context/changes/testable-domain-harness/`, Fazy 2-3).
+Przykład referencyjny: `src/test/java/hexatorn/mysmaug/controller/ShellTest.java`.
+
+Wszystko z §6.1 obowiązuje dalej (nazwa klasy `*Test`, pakiet lustrzany, wyłącznie AssertJ,
+`.as(...)` mówiące co się nie stało, bramka gotowości). Poniżej tylko to, co dokłada warstwa UI.
+
+**Warunki uruchomienia — przeczytaj, zanim uznasz test za flaky**
+
+- Test otwiera **realne okno** i przejmuje kursor. Headless nie istnieje na JFX 25 (brak buildu
+  Monocle — patrz §7), więc nie da się tego obejść. Nie uruchamiaj takich testów w tle podczas
+  innej pracy na maszynie.
+- Robot klika w to, co jest **na wierzchu ekranu**. Okno zasłonięte przez inne oddaje mu
+  kliknięcia, a test pada na dalszej asercji, nie na przyczynie.
+- Sesja MCP `ide` musi żyć. Padnięta zabiera IntelliJ impuls do zejścia w tło i produkuje serie
+  porażek nieodróżnialne od błędu kodu — w F-01 Fazie 3 kosztowało to kilka godzin hipotez o
+  TestFX i flagach modułowych (17 czerwonych na 20 przebiegów przy padniętej sesji, 41 na 41
+  zielonych przy żywej, bez żadnej zmiany w kodzie). Pełna reguła: `lessons.md`.
+
+**Szkielet klasy**
+
+- `@Tag("ui")` — **obowiązkowy**. To on odcina test od `-DexcludedGroups=ui`; bez niego pętla
+  „edytuj → sprawdź" przestaje być użyteczna, bo wymusza ekran przy każdym przebiegu.
+- `@ExtendWith(ApplicationExtension.class)` plus metoda `@Start` przyjmująca `Stage`.
+- `@Start` składa scenę **wspólnym punktem produkcyjnym**, nie własnym kodem:
+  `MySmaugApplication.configureStage(stage, MySmaugApplication.createShellScene())`, potem
+  `stage.show()` i `stage.toFront()`. Test omijający ten punkt biegnie inną ścieżką niż
+  użytkownik (np. bez wstrzykniętego `ThemeManager`) i przegapia dokładnie tę klasę błędów,
+  która do użytkownika trafia.
+- TestFX woła `@Start` **osobno dla każdego testu na tym samym `Stage`**. Cokolwiek konfigurujesz
+  raz na okno (`initStyle` i podobne) musi być idempotentne — JavaFX zabrania zmiany stylu okna
+  po pierwszym pokazaniu, więc drugi test w klasie padnie na ponownym ustawieniu.
+
+**Lokalizowanie kontrolek**
+
+- Po `fx:id` (`robot.lookup("#btnPodsumowania")`) albo po etykiecie tekstowej. **Nigdy po
+  strukturze drzewa** — to sprzęga test z układem, który wolno zmieniać bez zmiany zachowania.
+- `queryAs(Button.class)` zamiast surowego `Node`, żeby typ był widoczny w teście.
+
+**Bariera zdarzeń i wyjątki z handlerów**
+
+- Po każdej interakcji `WaitForAsyncUtils.waitForFxEvents()` — bez niej asercja potrafi wyprzedzić
+  handler. Nigdy `Thread.sleep`.
+- Wyjątek rzucony w handlerze leci na wątku JavaFX i **nigdy nie dociera do wątku testu**. Bez
+  jawnego wyciągnięcia test pada dopiero na dalszej asercji, mówiąc „widok się nie podmienił" i
+  przemilczając powód — sygnał jest, ale nie tam, gdzie się go szuka. Dlatego po barierze wołaj
+  `WaitForAsyncUtils.checkException()`, a złapany wyjątek zamień na `AssertionError` z komunikatem
+  „co się nie stało" plus **przyczyną źródłową** (zejście po `getCause()` do korzenia; warstwy
+  pośrednie w rodzaju `InvocationTargetException` nic nie wnoszą). Oryginał zostaw jako `cause`.
+- `@BeforeAll` ustawiające `WaitForAsyncUtils.printException = false`. Odkąd wyjątek raportujesz
+  sam, surowy zrzut TestFX jest duplikatem — i to takim, który spycha właściwy komunikat na środek
+  wyjścia builda.
+
+**Konfiguracja, która siedzi już w `pom.xml`**
+
+- `<argLine>--add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</argLine>` w
+  surefire. TestFX sięga refleksją do internals JavaFX, a w czasie testów działa w module
+  nienazwanym. To **jedyny** działający mechanizm flag: surefire nie czyta
+  `module-info-patch.args` generowanego przez `maven-compiler-plugin`
+  (apache/maven-surefire #3345, otwarte).
+- `<exclusion>` na `org.osgi:org.osgi.core` w `testfx-core`. Bez niej Ikonli dostaje
+  `IllegalAccessError` zamiast spodziewanego braku klasy, więc ścieżka zapasowa nie łapie i
+  `FontIcon` nie ładuje się z FXML-a. Objaw jest zdradliwy: shell nie wstaje w teście, choć w
+  produkcji wstaje bez zarzutu.
+- Nowy pakiet testowy **nie wymaga żadnego wpisu modułowego** — tak samo jak w §6.1.
+
+**Bramka gotowości i powtarzalność**
+
+- Obowiązuje bramka z §6.1 wraz z rozróżnieniem dwóch dróg. Pod **test-first** czerwień dla
+  widoku brzmi zwykle „lookup nie znalazł `#btnX`" albo „FXML się nie ładuje" — to prawidłowy
+  dowód sygnału, o ile komunikat mówi, czego zabrakło.
+- Pod **testem po implementacji** inscenizuj czerwień na realnej rzeczy: podmień ścieżkę FXML
+  w `MainController.Section` na nieistniejącą i sprawdź, że test pada **w miejscu kliknięcia**,
+  komunikatem `Brak zasobu FXML: ...` — a nie kilka asercji dalej zdaniem „widok się nie
+  podmienił". Jeśli pada dalej, brakuje wyciągnięcia wyjątku z handlera (patrz wyżej).
+- Niezależnie od drogi: **co najmniej dwa zielone przebiegi pod rząd**, zanim uznasz test za
+  gotowy. Warstwa UI ma realne ryzyko flaky, którego warstwa bez UI nie ma.
+
+**Uruchomienie**
+
+- `./mvnw.cmd test` — pełny zestaw, razem z UI.
+- `./mvnw.cmd test -DexcludedGroups=ui` — bez testów wymagających ekranu.
 
 ### 6.4 Dodanie testu poprawności agregacji
 
