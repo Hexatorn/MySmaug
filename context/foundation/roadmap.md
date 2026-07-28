@@ -3,7 +3,7 @@ project: "MySmaug"
 version: 1
 status: draft
 created: 2026-06-12
-updated: 2026-06-21
+updated: 2026-07-28
 prd_version: 2
 main_goal: learn
 top_blocker: capacity
@@ -29,7 +29,7 @@ Para prowadząca wspólny budżet domowy nie potrafi wiarygodnie odpowiedzieć "
 
 | ID    | Change ID (ID zmiany)         | Outcome (Rezultat, „user can …")                                     | Prerequisites (Wymagania wstępne) | PRD refs (Odniesienia do PRD)     | Status   |
 | ----- | ----------------------------- | -------------------------------------------------------------------- | ---------------- | --------------------------------- | -------- |
-| F-01  | testable-domain-harness       | (foundation) logika domeny/agregacji testowalna headless, bramka testów zielona | —      | Success Criteria, NFR durability  | ready    |
+| F-01  | testable-domain-harness       | (foundation) logika domeny/agregacji testowalna headless, bramka testów zielona | —      | Success Criteria, NFR durability  | done     |
 | F-02  | file-logging                  | (foundation) błędy i zdarzenia logowane do pliku obok aplikacji      | —                | NFR durability                    | ready    |
 | F-03  | portable-persistence-baseline | (foundation) połączenie SQLite ze ścieżki w configu aplikacji (lub brak), atomic write, restart-safe, init schematu na żądanie | —  | NFR durability, NFR portability, FR-005, FR-006, FR-023 | ready    |
 | F-04  | portable-app-packaging        | (foundation) app-image uruchamialny z portable media bez instalatora | —                | NFR portability                   | ready    |
@@ -85,7 +85,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Blockers (Blokery):** —
 - **Unknowns (Niewiadome):** —
 - **Risk (Ryzyko):** Minimalny kontrakt: tylko struktura warstw + harness + jeden test, nie pełny pakiet testów. Ryzyko = przeciągnięcie w "architekturę na zapas"; trzymać do tego, co weryfikuje S-01. Sekwencjonowany pierwszy, bo `main_goal: learn` + testy jako twarda bramka — kontrola nad AI zaczyna się od możliwości weryfikacji.
-- **Status:** ready
+- **Status:** done
 
 ### F-02: Logowanie do pliku
 
@@ -341,3 +341,4 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 (Puste przy pierwszym wygenerowaniu. `/10x-archive` dopisuje tu wpis — i przełącza Status pozycji na `done` — gdy zmiana o pasującym Change ID zostaje zarchiwizowana. NIE wypełniaj z góry.)
 
 - **F-05: (foundation) główny kontener aplikacji z trwałym, ostylowanym sidebarem (rail + buttony z labelami + ikony, STAŁA szerokość) + mechanizm przełączania środkowego obszaru widoku, zademonstrowany na 2-3 pustych panelach-placeholderach (mountach).** — Archived 2026-06-21 → `context/archive/2026-06-14-view-navigation-shell/`. Lesson: —.
+- **F-01: (foundation) logika domeny i agregacji jest wydzielona od wątku JavaFX i daje się uruchamiać oraz testować headless; konwencja testów JUnit ustalona, pierwszy test zielony.** — Archived 2026-07-28 → `context/archive/2026-06-22-testable-domain-harness/`. **Zakres dowieziony częściowo — Outcome wyżej cytowany dosłownie za pierwotnym zapisem, nie za stanem faktycznym:** dowieziony jest harness (surefire 3.5.5, AssertJ, TestFX 4.0.18) wraz z konwencją w `test-plan.md` §6.1/§6.3 i zielonym zestawem. **Ziarno domeny nie powstało** — w repo nie było logiki bez JavaFX, a atrapa modelu wyprzedzałaby decyzje S-01, więc ryzyka #1 (seed) i #5 zostają bez pokrycia do S-01 (`test-plan.md` §3). **Headless jest niemożliwy** na JFX 25 (brak buildu Monocle) — testy widoków chodzą na realnym ekranie; re-ewaluacja przy JavaFX 26 (`test-plan.md` §7). Lesson: —.
