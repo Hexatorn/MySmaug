@@ -354,9 +354,13 @@ Cost × signal nadal rządzi *wyborem warstwy*, nie tym *czy* testować.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-23
-- Stack versions last verified: 2026-06-23
-- AI-native tool references last verified: 2026-06-23
+- Strategy (§1–§5) last reviewed: 2026-07-27 — F-01 Faza 4 dopisała zasadę #4 „Test-first domyślnie"
+  (§1) i przestawiła domyślny driver planu na `/10x-tdd` (§6, wstęp)
+- Stack versions last verified: 2026-07-27 — komplet wersji z §4 sprawdzony wobec `pom.xml`
+  (surefire 3.5.5, JUnit 5.12.1, AssertJ 3.27.7, TestFX 4.0.18, Hamcrest 2.1,
+  `maven-compiler-plugin` 3.15.0, Maven 3.9.11 z wrappera); potwierdzone niezależnie przy
+  impl-review 2026-07-28
+- AI-native tool references last verified: 2026-06-23 — nie re-weryfikowane w Fazie 4
 
 Refresh (`/10x-test-plan --refresh`) gdy:
 

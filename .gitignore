@@ -36,8 +36,12 @@ build/
 .DS_Store
 
 ### 10xDevs ###
-context/
 .agents/
 skills-lock.json
 .claude/
 CLAUDE.md
+CLAUDE_ccinit.md
+
+### Kopie zapasowe (/hex-translate) ###
+backup/
+

@@ -15,6 +15,14 @@ Każda faza dowożąca test ma bramkę „zepsuj → zobacz czerwień i komunika
 
 ## Current State Analysis
 
+> **Nieaktualne (impl-review 2026-07-28) — patrz aneks Fazy 2.** Ta sekcja opisuje build sprzed
+> powrotu na stabilnego Mavena i nie została przy aneksie przepisana; wiążący jest zapis w aneksie.
+> Nieaktualne są wszystkie zdania o **Mavenie 4.0.0-rc-5** (dziś 3.9.11), o **`maven-compiler-plugin`
+> 4.0.0-beta-4** (dziś 3.15.0), o **`src/test/java/module-info-patch.maven`** (plik usunięty jako
+> zbędny) oraz teza, że **gołe `mvn` nie zadziała** — działa, bo wrapper przypina tę samą wersję,
+> którą daje PATH. Te same twierdzenia wracają w dwóch punktach „Key Discoveries" niżej i tam też
+> są nieaktualne. Aktualny stan: `pom.xml` oraz `test-plan.md` §4.
+
 **Runner już działa.** Wbrew stanowi opisanemu w `research.md` (2026-06-22), commit `0c6118c` przestawił build na
 Mavena 4 i `mvn test` uruchamia dziś testy:
 
@@ -105,6 +113,23 @@ oglądamy czerwień i komunikat, przywracamy. W Fazie 3 ten przebieg ma dodatkow
 **granicę sygnału** obu bibliotek (patrz niżej).
 
 ## Critical Implementation Details
+
+> **Częściowo nieaktualne (impl-review 2026-07-28).** Trzy z czterech akapitów niżej zostały
+> unieważnione przez aneksy i nie zostały przy nich przepisane; wiążący jest zapis w aneksach.
+>
+> - **Tabela „granica sygnału"** — nieaktualna (aneks Fazy 1, skaner zasobów). Pod skanerem zła
+>   ścieżka w `MainController.Section` zapala **także** test zasobów, więc kolumna „🟢 zielony"
+>   mówi dziś odwrotnie niż stan faktyczny. Zakaz „naprawiania" tego sprzęgnięciem z `enum Section`
+>   pozostaje jednak w mocy — skaner czyta literały, nie prywatne pole.
+> - **„Flagi modułowe dla TestFX — dwa kandydujące mechanizmy"** — nieaktualne (aneks Fazy 2).
+>   Mechanizm (1) jest ślepą uliczką z dwóch niezależnych powodów: pliku już nie ma, a surefire
+>   i tak nie czyta generowanego z niego `module-info-patch.args` (apache/maven-surefire #3345).
+>   Rozstrzygnięte: został mechanizm (2), `<argLine>` w konfiguracji surefire — już w `pom.xml`.
+> - **„Pakiety testowe wymagają jawnego `add-opens`"** — nieaktualne (aneks Fazy 2). Nowy pakiet
+>   testowy nie wymaga żadnego wpisu; łatanie modułu obsługują wtyczki.
+>
+> **W mocy zostaje** akapit o realnej sesji graficznej — z dopiskiem z aneksu Fazy 3, pkt 4:
+> warunkiem jest także żywa sesja MCP `ide`.
 
 **Granica sygnału testu zasobów vs TestFX.** Dwa scenariusze psucia dają różny wynik i to jest zamierzone:
 
@@ -258,7 +283,11 @@ To samo zdarzenie, które wprowadza ryzyko, wyłącza jego wykrywanie. Dlatego:
 
 **Świadomie akceptowane ograniczenie:** skaner nie wykryje ścieżki sklejanej w runtime. Nie budujemy pod to
 obsługi, bo takiego kodu nie ma i może nie być. Klasę awarii, która się przez to prześlizgnie, ma złapać TestFX
-(Faza 3). Reguła przypominająca o weryfikacji skanera przy nowym zasobie: `src/main/resources/CLAUDE.md`.
+(Faza 3). Reguła przypominająca o weryfikacji skanera przy nowym zasobie miała zamieszkać
+w `src/main/resources/CLAUDE.md`. **Nieaktualne (impl-review 2026-07-28):** tego pliku już nie ma — jako
+osierocony zapalił własny test i został usunięty (patrz następny aneks Fazy 1). Sama reguła nie zniknęła,
+tylko przeszła z tekstu w mechanizm: kierunek zasób→kod w `ResourcesTest` wymusza ją twardziej niż notatka,
+bo zasób ładowany konwencją, której skaner nie zna, zgłasza się sam jako osierocony.
 
 **Unieważnia kryterium 3.6.** „Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony" traci
 ważność i przechodzi w swoje przeciwieństwo: pod skanerem zła ścieżka w `Section` **zapala** także test zasobów.
@@ -541,6 +570,25 @@ trzeba wyciągać jawnie, inaczej test raportuje objaw zamiast przyczyny.
 (`doszed�`) — to kodowanie strumienia na Windows, nie kod testu. Psuje czytelność, o którą walczy cała ta faza,
 ale jest osobną, konfiguracyjną drobnicą; świadomie poza zakresem Fazy 3.
 
+**Sprostowanie (2026-07-28, impl-review): punkt 7 jest nieaktualny — usterki nie ma.** Użytkownik
+zgłaszał co najmniej trzykrotnie, że po jego stronie polskie znaki wyświetlają się poprawnie.
+Obserwacja została przyjęta i żadnej poprawki nie podjęto — ale samo unieważnienie punktu nie
+trafiło wtedy do zapisu, więc powyższy akapit stał w sprzeczności z tym, co już wiedzieliśmy.
+
+Pomiar wykonany przy impl-review rozstrzyga: celowo padający test z pełnym alfabetem
+(`ą ć ę ł ń ó ś ź ż`, wersaliki, `—`, `„”`) czytany trzema niezależnymi kanałami dał plik
+`target/surefire-reports/*.txt` z **kompletem** znaków, poprawny odczyt w konsoli użytkownika
+i same znaki zastępcze wyłącznie w potoku przechwytującym wyjście agenta — ten dekoduje bajty
+cp1250 jako UTF-8, więc każdy znak spoza ASCII zamienia w jeden `�`. Rozjazd siedzi w warstwie
+obserwacji, nie w projekcie.
+
+**Nie „naprawiaj" tego w `pom.xml`.** Napraszająca się flaga `-Dstdout.encoding=UTF-8` kazałaby
+JVM pisać UTF-8 na konsolę cp1250 i **zepsuła** działający dziś odczyt użytkownika. Ta sama
+nieaktualna diagnoza została utrwalona w komunikacie commita `621e60f`, którego nie poprawiamy —
+niniejsze sprostowanie obowiązuje za oba miejsca. Reguła wyciągnięta z tego przebiegu:
+`lessons.md`, „Obserwacja użytkownika unieważniła punkt — zaniechanie poprawki to nie to samo co
+zapis".
+
 ---
 
 ## Phase 4: Utrwalenie konwencji
@@ -640,6 +688,18 @@ nowego testu") pokrywa także nową, dwudrożną bramkę.
 
 ## Testing Strategy
 
+> **Częściowo nieaktualne (impl-review 2026-07-28).** Ta sekcja opisuje zamiar sprzed aneksów i nie
+> została przy nich przepisana; wiążący jest zapis w aneksach. Cztery rozbieżności:
+>
+> - **smoke runnera nie istnieje** — klasa usunięta (drugi aneks Fazy 1);
+> - **test zasobów nie jest sztywną listą** czterech FXML-i i `styles.css`, tylko dwukierunkowym
+>   skanerem wyprowadzającym listę z kodu (pierwszy aneks Fazy 1);
+> - **krok 3 „Ręcznych kroków" jest niewykonalny** — nie ma czego psuć; kryterium 1.5 odhaczone
+>   dowodem zastępczym z `ResourcesTest` (drugi aneks Fazy 1);
+> - **krok 6 mówi odwrotnie niż stan faktyczny** — pod skanerem zła ścieżka w `Section` zapala
+>   **także** test zasobów, więc granica sygnału, którą krok miał obserwować, już nie istnieje
+>   (pierwszy aneks Fazy 1; aneks Fazy 3, pkt 3).
+
 ### Testy bez UI (JUnit + AssertJ):
 
 - Smoke runnera — dowód, że runner żyje i łamie build przy porażce.
@@ -700,7 +760,7 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 #### Manual
 
-- [x] 1.5 Bramka psucia A — fałszywa asercja smoke'a daje `BUILD FAILURE`, przywrócenie wraca do zielonego — 48d2bb8
+- [x] 1.5 Bramka psucia A — fałszywa asercja smoke'a daje `BUILD FAILURE`, przywrócenie wraca do zielonego — 48d2bb8 — odhaczone **dowodem zastępczym**: smoke usunięty, czerwień wypadła na realnej usterce w `ResourcesTest` (patrz drugi aneks Fazy 1)
 - [x] 1.6 Bramka psucia B — zmiana nazwy pliku FXML zapala test zasobów z czytelnym komunikatem — 48d2bb8
 - [x] 1.7 Testy uruchamiają się także z poziomu IntelliJ — 48d2bb8
 
@@ -729,7 +789,7 @@ bez zmiany zachowania aplikacji, weryfikowane ręcznym uruchomieniem. Cofnięcie
 
 - [x] 3.4 Brak regresji — `./mvnw.cmd javafx:run` zachowuje chrome, motyw, drag, resize i przełączanie — 621e60f
 - [x] 3.5 Bramka psucia — zła ścieżka w `Section` zapala testy shella komunikatem `Brak zasobu FXML: ...` — 621e60f
-- [x] 3.6 Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony — 621e60f
+- [x] 3.6 Obserwacja granicy — przy tej samej usterce test zasobów pozostaje zielony — 621e60f — odhaczone jako **nieaktualne**: pod skanerem test zasobów zapala się także, więc granica nie istnieje (patrz pierwszy aneks Fazy 1 oraz aneks Fazy 3 pkt 3)
 - [x] 3.7 Testy TestFX przechodzą powtarzalnie (co najmniej dwa przebiegi pod rząd) — 621e60f
 
 ### Phase 4: Utrwalenie konwencji
