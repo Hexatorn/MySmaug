@@ -53,6 +53,8 @@ Para prowadząca wspólny budżet domowy nie potrafi wiarygodnie odpowiedzieć "
 
 Pomoc nawigacyjna — grupuje pozycje dzielące ten sam łańcuch Prerequisites (wymagań wstępnych). Kanoniczna kolejność wciąż żyje w grafie zależności poniżej; ta tabela to proponowana kolejność czytania w poprzek równoległych ścieżek.
 
+> „Graf zależności" oznacza tu **topologiczną kolejność** sekcji `## Foundations` i `## Slices` wraz z polami `Prerequisites`, a nie rysunek. Rysunek — figury i strzałki po redukcji przechodniej — stoi osobno w `context/foundation/roadmap-graph.md` i jest widokiem pochodnym: przy zmianie roadmapy trzeba go przerysować ręcznie.
+
 | Stream (Strumień) | Theme (Temat)                  | Chain (Łańcuch)                                                      | Note (Notatka)                                                                       |
 | ------ | ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | A      | Fundamenty (kontrola, dane, UI) | `F-01` / `F-02` / `F-03` / `F-04` / `F-05`                          | Pięć równoległych enablerów — przy ryzyku `capacity` rób je w osobnych sesjach. F-01/F-02/F-03 zasilają S-01; F-04 zasila S-10; F-05 (shell) zasila S-01/S-07 i transitywnie widoki. |

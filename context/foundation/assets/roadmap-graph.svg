@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 780" width="1060" height="780" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+
+  <title>Graf zależności roadmapy MySmaug — stan 2026-07-28</title>
+
+  <defs>
+    <marker id="strzalka" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8a8a"/>
+    </marker>
+    <style>
+      .box       { stroke-width: 2; }
+      .zrobione  { fill: #1b5e20; stroke: #0d3010; }
+      .dowziecia { fill: #0d47a1; stroke: #05295c; }
+      .zablok    { fill: #4a4a4a; stroke: #262626; }
+      .id        { fill: #ffffff; font-size: 17px; font-weight: 600; }
+      .opis      { fill: #e6e6e6; font-size: 13px; }
+      .linia     { stroke: #8a8a8a; stroke-width: 2; fill: none;
+                   stroke-linejoin: miter; }
+      .kraw      { stroke: #8a8a8a; stroke-width: 2; fill: none;
+                   stroke-linejoin: miter; marker-end: url(#strzalka); }
+      .tytul     { fill: #9a9a9a; font-size: 13px; }
+      .legenda   { fill: #9a9a9a; font-size: 13px; }
+    </style>
+  </defs>
+
+  <!-- ============ KRAWĘDZIE — routing ortogonalny, rysowane pod ramkami ============ -->
+
+  <!-- magistrala 1: F-01, F-02, F-03, F-05  ->  S-01 -->
+  <path class="linia" d="M 105 86 L 105 128"/>
+  <path class="linia" d="M 275 86 L 275 128"/>
+  <path class="linia" d="M 415 86 L 415 128"/>
+  <path class="linia" d="M 585 86 L 585 128"/>
+  <path class="linia" d="M 105 128 L 585 128"/>
+  <path class="kraw"  d="M 445 128 L 445 170"/>
+
+  <!-- magistrala 2: F-03, F-05  ->  S-07 (drugie wyjścia z tych samych ramek) -->
+  <path class="linia" d="M 475 86 L 475 150"/>
+  <path class="linia" d="M 645 86 L 645 150"/>
+  <path class="linia" d="M 475 150 L 775 150"/>
+  <path class="kraw"  d="M 775 150 L 775 170"/>
+
+  <!-- F-04 -> S-10 (wchodzi prawym bokiem: górna krawędź zajęta przez S-01) -->
+  <path class="kraw" d="M 955 86 L 955 338 L 860 338"/>
+
+  <!-- magistrala 3: S-01 -> warstwa 2 -->
+  <path class="linia" d="M 445 226 L 445 270"/>
+  <path class="linia" d="M 105 270 L 785 270"/>
+  <path class="kraw"  d="M 105 270 L 105 310"/>
+  <path class="kraw"  d="M 275 270 L 275 310"/>
+  <path class="kraw"  d="M 445 270 L 445 310"/>
+  <path class="kraw"  d="M 615 270 L 615 310"/>
+  <path class="kraw"  d="M 785 270 L 785 310"/>
+
+  <!-- S-07 -> S-09: kanałem po prawej, bo pod S-07 stoi S-10 -->
+  <path class="kraw" d="M 775 226 L 775 250 L 980 250 L 980 618 L 520 618"/>
+
+  <!-- magistrala 4: S-02 -> S-05, S-06, S-09 -->
+  <path class="linia" d="M 105 366 L 105 550"/>
+  <path class="linia" d="M 105 550 L 445 550"/>
+  <path class="kraw"  d="M 105 550 L 105 590"/>
+  <path class="kraw"  d="M 275 550 L 275 590"/>
+  <path class="kraw"  d="M 445 550 L 445 590"/>
+
+  <!-- proste zejścia -->
+  <path class="kraw" d="M 275 366 L 275 450"/>
+  <path class="kraw" d="M 785 366 L 785 450"/>
+
+  <!-- ================= WARSTWA 0 — fundamenty ================= -->
+
+  <rect class="box zrobione"  x="30"  y="30" width="150" height="56" rx="6"/>
+  <text class="id"   x="105" y="54" text-anchor="middle">F-01</text>
+  <text class="opis" x="105" y="73" text-anchor="middle">harness testów</text>
+
+  <rect class="box dowziecia" x="200" y="30" width="150" height="56" rx="6"/>
+  <text class="id"   x="275" y="54" text-anchor="middle">F-02</text>
+  <text class="opis" x="275" y="73" text-anchor="middle">logowanie do pliku</text>
+
+  <rect class="box dowziecia" x="370" y="30" width="150" height="56" rx="6"/>
+  <text class="id"   x="445" y="54" text-anchor="middle">F-03</text>
+  <text class="opis" x="445" y="73" text-anchor="middle">persystencja SQLite</text>
+
+  <rect class="box zrobione"  x="540" y="30" width="150" height="56" rx="6"/>
+  <text class="id"   x="615" y="54" text-anchor="middle">F-05</text>
+  <text class="opis" x="615" y="73" text-anchor="middle">shell nawigacji</text>
+
+  <rect class="box dowziecia" x="880" y="30" width="150" height="56" rx="6"/>
+  <text class="id"   x="955" y="54" text-anchor="middle">F-04</text>
+  <text class="opis" x="955" y="73" text-anchor="middle">pakowanie portable</text>
+
+  <!-- ================= WARSTWA 1 ================= -->
+
+  <rect class="box zablok" x="370" y="170" width="150" height="56" rx="6"/>
+  <text class="id"   x="445" y="194" text-anchor="middle">S-01</text>
+  <text class="opis" x="445" y="213" text-anchor="middle">zapis transakcji</text>
+
+  <rect class="box zablok" x="700" y="170" width="150" height="56" rx="6"/>
+  <text class="id"   x="775" y="194" text-anchor="middle">S-07</text>
+  <text class="opis" x="775" y="213" text-anchor="middle">kategorie</text>
+
+  <!-- ================= WARSTWA 2 ================= -->
+
+  <rect class="box zablok" x="30"  y="310" width="150" height="56" rx="6"/>
+  <text class="id"   x="105" y="334" text-anchor="middle">S-02</text>
+  <text class="opis" x="105" y="353" text-anchor="middle">lista miesiąca</text>
+
+  <rect class="box zablok" x="200" y="310" width="150" height="56" rx="6"/>
+  <text class="id"   x="275" y="334" text-anchor="middle">S-03</text>
+  <text class="opis" x="275" y="353" text-anchor="middle">suma miesięczna</text>
+
+  <rect class="box zablok" x="370" y="310" width="150" height="56" rx="6"/>
+  <text class="id"   x="445" y="334" text-anchor="middle">S-08</text>
+  <text class="opis" x="445" y="353" text-anchor="middle">beneficjenci</text>
+
+  <rect class="box zablok" x="540" y="310" width="150" height="56" rx="6"/>
+  <text class="id"   x="615" y="334" text-anchor="middle">S-12</text>
+  <text class="opis" x="615" y="353" text-anchor="middle">ustawienia bazy</text>
+
+  <rect class="box zablok" x="710" y="310" width="150" height="56" rx="6"/>
+  <text class="id"   x="785" y="334" text-anchor="middle">S-10</text>
+  <text class="opis" x="785" y="353" text-anchor="middle">onboarding</text>
+
+  <!-- ================= WARSTWA 3 ================= -->
+
+  <rect class="box zablok" x="200" y="450" width="150" height="56" rx="6"/>
+  <text class="id"   x="275" y="474" text-anchor="middle">S-04</text>
+  <text class="opis" x="275" y="493" text-anchor="middle">suma roczna</text>
+
+  <rect class="box zablok" x="710" y="450" width="150" height="56" rx="6"/>
+  <text class="id"   x="785" y="474" text-anchor="middle">S-11</text>
+  <text class="opis" x="785" y="493" text-anchor="middle">zmiana profilu</text>
+
+  <!-- ================= WARSTWA 4 ================= -->
+
+  <rect class="box zablok" x="30"  y="590" width="150" height="56" rx="6"/>
+  <text class="id"   x="105" y="614" text-anchor="middle">S-05</text>
+  <text class="opis" x="105" y="633" text-anchor="middle">edycja transakcji</text>
+
+  <rect class="box zablok" x="200" y="590" width="150" height="56" rx="6"/>
+  <text class="id"   x="275" y="614" text-anchor="middle">S-06</text>
+  <text class="opis" x="275" y="633" text-anchor="middle">soft-delete</text>
+
+  <rect class="box zablok" x="370" y="590" width="150" height="56" rx="6"/>
+  <text class="id"   x="445" y="614" text-anchor="middle">S-09</text>
+  <text class="opis" x="445" y="633" text-anchor="middle">filtr listy</text>
+
+  <!-- ================= LEGENDA ================= -->
+
+  <rect class="box zrobione"  x="30"  y="700" width="26" height="20" rx="4"/>
+  <text class="legenda" x="66"  y="715">zrealizowane (F-01, F-05)</text>
+
+  <rect class="box dowziecia" x="250" y="700" width="26" height="20" rx="4"/>
+  <text class="legenda" x="286" y="715">do wzięcia teraz — wszystkie wymagania spełnione (F-02, F-03, F-04)</text>
+
+  <rect class="box zablok"    x="710" y="700" width="26" height="20" rx="4"/>
+  <text class="legenda" x="746" y="715">zablokowane — brak wymagania (cała reszta)</text>
+
+  <text class="tytul" x="30" y="750">Strzałka biegnie od wymagania do tego, co ono odblokowuje. Rysunek po redukcji przechodniej: krawędź wynikająca z innej ścieżki nie jest rysowana.</text>
+  <text class="tytul" x="30" y="770">Stan odwzorowany 2026-07-28. Źródło prawdy: pola Prerequisites i Status w context/foundation/roadmap.md.</text>
+
+</svg>
