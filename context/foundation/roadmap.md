@@ -29,25 +29,32 @@ Para prowadząca wspólny budżet domowy nie potrafi wiarygodnie odpowiedzieć "
 
 | ID    | Change ID (ID zmiany)         | Outcome (Rezultat, „user can …")                                     | Prerequisites (Wymagania wstępne) | PRD refs (Odniesienia do PRD)     | Status   |
 | ----- | ----------------------------- | -------------------------------------------------------------------- | ---------------- | --------------------------------- | -------- |
-| F-01  | testable-domain-harness       | (foundation) logika domeny/agregacji testowalna headless, bramka testów zielona | —      | Success Criteria, NFR durability  | done     |
-| F-02  | file-logging                  | (foundation) błędy i zdarzenia logowane do pliku obok aplikacji      | —                | NFR durability                    | ready    |
-| F-03  | portable-persistence-baseline | (foundation) połączenie SQLite ze ścieżki w configu aplikacji (lub brak), atomic write, restart-safe, init schematu na żądanie | —  | NFR durability, NFR portability, FR-005, FR-006, FR-023 | ready    |
-| F-04  | portable-app-packaging        | (foundation) app-image uruchamialny z portable media bez instalatora | —                | NFR portability                   | ready    |
-| F-05  | view-navigation-shell         | (foundation) shell + ostylowany sidebar + przełączanie widoków na pustych mountach | —                | Business Logic (nawigacja), NFR Localization | done     |
-| S-01  | first-transaction-persist     | dodać jedną transakcję zapisaną trwale do bazy (kategoria opcjonalna)| F-01, F-02, F-03, F-05 | US-01, FR-012, FR-011, FR-001, FR-022 | proposed |
-| S-02  | monthly-transaction-list      | zobaczyć listę transakcji bieżącego miesiąca + nawigacja prev/next   | S-01             | US-01, FR-015                     | proposed |
-| S-03  | monthly-summary               | zobaczyć miesięczne podsumowanie: suma per kategoria + razem przych./wyd. | S-01         | US-01, FR-016, FR-011             | blocked  |
-| S-04  | yearly-summary                | zobaczyć roczne podsumowanie: suma per kategoria z rozbiciem po miesiącach | S-03        | FR-017                            | blocked  |
-| S-05  | edit-transaction              | edytować dowolne pole istniejącej transakcji                         | S-01, S-02       | FR-013                            | proposed |
-| S-06  | soft-delete-transaction       | usunąć transakcję (soft-delete), znika z list i podsumowań           | S-01, S-02       | FR-014                            | proposed |
-| S-07  | category-management           | utworzyć / zmienić nazwę / usunąć (jeśli pusta) kategorię            | F-03, F-05       | FR-007, FR-008, FR-009, FR-011    | proposed |
-| S-08  | beneficiary-management        | utworzyć / zmienić nazwę / usunąć (jeśli bez transakcji) beneficjenta| S-01             | FR-019, FR-020, FR-021            | proposed |
-| S-09  | transaction-list-filter       | filtrować listę transakcji po zakresie dat i/lub kategorii           | S-02, S-07       | FR-018                            | proposed |
-| S-10  | portable-onboarding           | przejść onboarding z portable media: połączenie z bazą, picker/utworzenie profilu, sticky default | S-01, F-04 | US-02, FR-002, FR-004, FR-023      | proposed |
-| S-11  | switch-active-profile         | zmienić aktywny profil w trakcie sesji                               | S-10             | FR-003                            | proposed |
-| S-12  | data-location-settings        | tworzyć/otwierać bazę i zmienić lokalizację pliku danych w ustawieniach | F-03, S-01       | FR-005, FR-006, FR-023            | proposed |
+| F-01  | testable-domain-harness       | (foundation) logika domeny/agregacji testowalna headless, bramka testów zielona | —      | Success Criteria, NFR durability  | ✅ done     |
+| F-02  | file-logging                  | (foundation) błędy i zdarzenia logowane do pliku obok aplikacji      | —                | NFR durability                    | ⚪ ready    |
+| F-03  | portable-persistence-baseline | (foundation) połączenie SQLite ze ścieżki w configu aplikacji (lub brak), atomic write, restart-safe, init schematu na żądanie | —  | NFR durability, NFR portability, FR-005, FR-006, FR-023 | ⚪ ready    |
+| F-04  | portable-app-packaging        | (foundation) app-image uruchamialny z portable media bez instalatora | —                | NFR portability                   | ⚪ ready    |
+| F-05  | view-navigation-shell         | (foundation) shell + ostylowany sidebar + przełączanie widoków na pustych mountach | —                | Business Logic (nawigacja), NFR Localization | ✅ done     |
+| S-01  | first-transaction-persist     | dodać jedną transakcję zapisaną trwale do bazy (kategoria opcjonalna)| ✅ F-01, ⚪ F-02, ⚪ F-03, ✅ F-05 | US-01, FR-012, FR-011, FR-001, FR-022 | 🔴 proposed |
+| S-02  | monthly-transaction-list      | zobaczyć listę transakcji bieżącego miesiąca + nawigacja prev/next   | 🔴 S-01          | US-01, FR-015                     | 🔴 proposed |
+| S-03  | monthly-summary               | zobaczyć miesięczne podsumowanie: suma per kategoria + razem przych./wyd. | 🔴 S-01      | US-01, FR-016, FR-011             | ❓ blocked  |
+| S-04  | yearly-summary                | zobaczyć roczne podsumowanie: suma per kategoria z rozbiciem po miesiącach | ❓ S-03     | FR-017                            | ❓ blocked  |
+| S-05  | edit-transaction              | edytować dowolne pole istniejącej transakcji                         | 🔴 S-01, 🔴 S-02 | FR-013                            | 🔴 proposed |
+| S-06  | soft-delete-transaction       | usunąć transakcję (soft-delete), znika z list i podsumowań           | 🔴 S-01, 🔴 S-02 | FR-014                            | 🔴 proposed |
+| S-07  | category-management           | utworzyć / zmienić nazwę / usunąć (jeśli pusta) kategorię            | ⚪ F-03, ✅ F-05 | FR-007, FR-008, FR-009, FR-011    | 🔴 proposed |
+| S-08  | beneficiary-management        | utworzyć / zmienić nazwę / usunąć (jeśli bez transakcji) beneficjenta| 🔴 S-01          | FR-019, FR-020, FR-021            | 🔴 proposed |
+| S-09  | transaction-list-filter       | filtrować listę transakcji po zakresie dat i/lub kategorii           | 🔴 S-02, 🔴 S-07 | FR-018                            | 🔴 proposed |
+| S-10  | portable-onboarding           | przejść onboarding z portable media: połączenie z bazą, picker/utworzenie profilu, sticky default | 🔴 S-01, ⚪ F-04 | US-02, FR-002, FR-004, FR-023      | 🔴 proposed |
+| S-11  | switch-active-profile         | zmienić aktywny profil w trakcie sesji                               | 🔴 S-10          | FR-003                            | 🔴 proposed |
+| S-12  | data-location-settings        | tworzyć/otwierać bazę i zmienić lokalizację pliku danych w ustawieniach | ⚪ F-03, 🔴 S-01 | FR-005, FR-006, FR-023            | 🔴 proposed |
 
-> Statusy: `proposed` = proponowane · `ready` = gotowe (do `/10x-plan`) · `blocked` = zablokowane · `done` = zrobione.
+> Statusy — odpowiedź na pytanie „czy mogę to teraz wziąć?":
+> ⚪ `ready` = tak, wymagania wstępne spełnione, `/10x-plan` można uruchomić · 🔴 `proposed` = nie, czeka na realizację innych pozycji (Prerequisites) · ❓ `blocked` = nie, czeka na decyzję usera — patrz `## Open Roadmap Questions` · ✅ `done` = zrobione, zarchiwizowane.
+>
+> Czerwień znaczy „zablokowane" w obu odmianach; różni je to, kto ma ruch. Przy 🔴 czeka się na inne pozycje, przy ❓ na Ciebie.
+>
+> Symbole są tylko ozdobą czytelniczą — nośnikiem znaczenia pozostaje słowo kluczowe, którego szukają skille 10x. Gdy `/10x-archive` przestawi status na `done`, symbol przy tej pozycji trzeba dopisać ręcznie.
+>
+> **Uwaga na duplikację stanu:** symbole w kolumnie `Prerequisites` powtarzają status pozycji, do której się odwołują. Zmiana statusu wymaga poprawki w KAŻDYM wierszu, który tę pozycję wymienia — np. awans F-02 na `done` dotyka nie tylko wiersza F-02, ale i wymagań S-01. Żaden skill tego nie pilnuje.
 
 ## Streams (Strumienie)
 
@@ -57,10 +64,10 @@ Pomoc nawigacyjna — grupuje pozycje dzielące ten sam łańcuch Prerequisites 
 
 | Stream (Strumień) | Theme (Temat)                  | Chain (Łańcuch)                                                      | Note (Notatka)                                                                       |
 | ------ | ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| A      | Fundamenty (kontrola, dane, UI) | `F-01` / `F-02` / `F-03` / `F-04` / `F-05`                          | Pięć równoległych enablerów — przy ryzyku `capacity` rób je w osobnych sesjach. F-01/F-02/F-03 zasilają S-01; F-04 zasila S-10; F-05 (shell) zasila S-01/S-07 i transitywnie widoki. |
-| B      | Kręgosłup transakcji i agregacji | `S-01` → `S-02` → {`S-05`, `S-06`, `S-09`} ; `S-01` → `S-03` → `S-04` | Trzon `learn`-startu: zaczyna od znanego SQL (S-01), potem rozgałęzia na listę, edycję, agregacje. S-09 dociąga `S-07` ze Stream C. |
-| C      | Słowniki                       | `S-07` ; `S-08`                                                      | Kategorie (zależne od F-03) i beneficjent (zależny od S-01) — równolegle do Stream B. |
-| D      | Profil, onboarding, ustawienia | `S-10` → `S-11` ; `S-12`                                             | Pełny cykl życia profilu i ustawień nad ziarnem profilu z S-01; S-10 dociąga F-04 ze Stream A. |
+| A      | Fundamenty (kontrola, dane, UI) | ✅ `F-01` / ⚪ `F-02` / ⚪ `F-03` / ⚪ `F-04` / ✅ `F-05`             | Pięć równoległych enablerów — przy ryzyku `capacity` rób je w osobnych sesjach. F-01/F-02/F-03 zasilają S-01; F-04 zasila S-10; F-05 (shell) zasila S-01/S-07 i transitywnie widoki. |
+| B      | Kręgosłup transakcji i agregacji | 🔴 `S-01` → 🔴 `S-02` → {🔴 `S-05`, 🔴 `S-06`, 🔴 `S-09`} ; 🔴 `S-01` → ❓ `S-03` → ❓ `S-04` | Trzon `learn`-startu: zaczyna od znanego SQL (S-01), potem rozgałęzia na listę, edycję, agregacje. S-09 dociąga `S-07` ze Stream C. |
+| C      | Słowniki                       | 🔴 `S-07` ; 🔴 `S-08`                                                | Kategorie (zależne od F-03) i beneficjent (zależny od S-01) — równolegle do Stream B. |
+| D      | Profil, onboarding, ustawienia | 🔴 `S-10` → 🔴 `S-11` ; 🔴 `S-12`                                    | Pełny cykl życia profilu i ustawień nad ziarnem profilu z S-01; S-10 dociąga F-04 ze Stream A. |
 
 ## Baseline (Stan wyjściowy)
 
@@ -76,7 +83,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 
 ## Foundations (Fundamenty)
 
-### F-01: Harness testów + testowalna warstwa domeny
+### ✅ F-01: Harness testów + testowalna warstwa domeny
 
 - **Outcome (Rezultat):** (foundation) logika domeny i agregacji jest wydzielona od wątku JavaFX i daje się uruchamiać oraz testować headless; konwencja testów JUnit ustalona, pierwszy test zielony.
 - **Change ID (ID zmiany):** testable-domain-harness
@@ -89,7 +96,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk (Ryzyko):** Minimalny kontrakt: tylko struktura warstw + harness + jeden test, nie pełny pakiet testów. Ryzyko = przeciągnięcie w "architekturę na zapas"; trzymać do tego, co weryfikuje S-01. Sekwencjonowany pierwszy, bo `main_goal: learn` + testy jako twarda bramka — kontrola nad AI zaczyna się od możliwości weryfikacji.
 - **Status:** done
 
-### F-02: Logowanie do pliku
+### ⚪ F-02: Logowanie do pliku
 
 - **Outcome:** (foundation) błędy i kluczowe zdarzenia trafiają do pliku logu obok aplikacji; nieobsłużone wyjątki wątku JavaFX są przechwytywane i logowane.
 - **Change ID:** file-logging
@@ -102,7 +109,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Minimalny kontrakt: jeden logger do pliku + handler uncaught-exception, bez metryk/dashboardów (poza zakresem). Ryzyko = rozrost w pełną obserwowalność; trzymać przy diagnostyce dwóch ścieżek (zapis, wątek UI).
 - **Status:** ready
 
-### F-03: Przenośna persystencja danych
+### ⚪ F-03: Przenośna persystencja danych
 
 - **Outcome:** (foundation) połączenie SQLite ustanawiane WYŁĄCZNIE ze ścieżki w configu aplikacji; brak configu / brak wskazania / wskazanie nieistniejącej bazy ⇒ brak połączenia (jawny stan, bez cichego auto-create i bez hardkodu); zapis atomic i odporny na wyciągnięcie nośnika; inicjalizacja schematu na żądanie (tworzenie nowej bazy).
 - **Change ID:** portable-persistence-baseline
@@ -115,7 +122,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Minimalny kontrakt: rozwiązanie ścieżki z configu aplikacji + polityka atomic write + inicjalizacja schematu na żądanie, NIE pełny schemat wszystkich tabel (dokłada S-01 i kolejne slice'y). Default lokalizacji to tylko PODPOWIEDŹ (prefill), nigdy cichy fallback. Ryzyko = zbudowanie całej warstwy danych z góry — wtedy łamie scope cap; test: po F-03 S-01 wciąż dokłada tabelę i ćwiczy zapis realną operacją usera.
 - **Status:** ready
 
-### F-04: Przenośne pakowanie aplikacji
+### ⚪ F-04: Przenośne pakowanie aplikacji
 
 - **Outcome:** (foundation) aplikacja pakowana jako portable app-image (jpackage), uruchamialny z nośnika bez instalatora i bez uprawnień administratora.
 - **Change ID:** portable-app-packaging
@@ -129,7 +136,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Minimalny kontrakt: jeden działający app-image + procedura uruchomienia z nośnika, bez CI/CD i bez auto-release (te są post-MVP). jpackage to obszar nauki (blind spot) — stąd osobny mały krok zamiast zwijania w slice funkcjonalny.
 - **Status:** ready
 
-### F-05: Szkielet nawigacji (app-shell + sidebar)
+### ✅ F-05: Szkielet nawigacji (app-shell + sidebar)
 
 - **Outcome:** (foundation) główny kontener aplikacji z trwałym, ostylowanym sidebarem (rail + buttony z labelami + ikony, STAŁA szerokość) + mechanizm przełączania środkowego obszaru widoku, zademonstrowany na 2-3 pustych panelach-placeholderach (mountach).
 - **Change ID:** view-navigation-shell
@@ -144,7 +151,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 
 ## Slices (Wycinki)
 
-### S-01: Zapis pierwszej transakcji do bazy
+### 🔴 S-01: Zapis pierwszej transakcji do bazy
 
 - **Outcome:** user dodaje jedną transakcję (kwota, sklep, opis, data, typ, `wpisał` auto z profilu, `beneficjent` wymagany) i jest ona trwale zapisana w bazie — widoczna po restarcie; kategoria opcjonalna (uncategorized dozwolone).
 - **Change ID:** first-transaction-persist
@@ -157,7 +164,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Najcieńszy kręgosłup — celowo bundluje minimalny seed profil+beneficjent, bo FR-012 wymaga `beneficjent` (REQUIRED) i `wpisał` (z profilu); pełny picker/switch (FR-002/003/004) i pełny CRUD beneficjenta (S-08) zostają osobno, żeby S-01 nie wchłonął większości PRD. NFR durability i etykiety PL (binding mapping) obowiązują od tego slice'a.
 - **Status:** proposed
 
-### S-02: Lista transakcji bieżącego miesiąca
+### 🔴 S-02: Lista transakcji bieżącego miesiąca
 
 - **Outcome:** user widzi listę transakcji domyślnie zawężoną do bieżącego miesiąca, z nawigacją Poprzedni/Następny miesiąc; nowo dodana transakcja jest widoczna od razu, bez restartu.
 - **Change ID:** monthly-transaction-list
@@ -169,7 +176,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Pierwsze realne zetknięcie z reaktywnym odświeżaniem JavaFX (properties/binding) — blind spot autora; F-02 (logowanie wątku UI) jest tu zabezpieczeniem. NFR responsiveness ≤1s @ 1000 transakcji dotyczy tej listy.
 - **Status:** proposed
 
-### S-03: Podsumowanie miesięczne
+### ❓ S-03: Podsumowanie miesięczne
 
 - **Outcome:** user widzi miesięczne podsumowanie wybranego miesiąca: suma per kategoria, Razem przychody, Razem wydatki — z respektowaniem soft-delete; transakcje bez kategorii obsłużone wg decyzji z Otwartego pytania #1.
 - **Change ID:** monthly-summary
@@ -182,7 +189,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Pierwszy slice agregacji — tu zapada test "liczby się zgadzają" (twarda bramka via F-01). Domknięcie zablokowane do rozstrzygnięcia obsługi uncategorized, bo wybór zmienia kształt agregacji i UI.
 - **Status:** blocked
 
-### S-04: Podsumowanie roczne
+### ❓ S-04: Podsumowanie roczne
 
 - **Outcome:** user widzi roczne podsumowanie wybranego roku: suma per kategoria z rozbiciem po miesiącach (klasyczny use-case formuł `BD.*` z Excela).
 - **Change ID:** yearly-summary
@@ -195,7 +202,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Rozszerza maszynerię agregacji z S-03 na rok × miesiąc; twarda bramka testów poprawności obowiązuje. Zablokowany przez tę samą decyzję uncategorized (Otwarte pytanie #1) co S-03.
 - **Status:** blocked
 
-### S-05: Edycja transakcji
+### 🔴 S-05: Edycja transakcji
 
 - **Outcome:** user edytuje dowolne pole istniejącej transakcji (kwota, data, typ, kategoria, beneficjent, `wpisał`), m.in. kategoryzacja-po-fakcie zgodnie z FR-011.
 - **Change ID:** edit-transaction
@@ -207,7 +214,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Wszystkie pola edytowalne (świadoma decyzja PRD, brak read-only po zapisie). Edycja musi przejść przez ten sam atomic write co S-01, inaczej łamie NFR durability.
 - **Status:** proposed
 
-### S-06: Soft-delete transakcji
+### 🔴 S-06: Soft-delete transakcji
 
 - **Outcome:** user usuwa transakcję (soft-delete); usunięta znika z list, podsumowań i ewentualnych eksportów, ale pozostaje w danych.
 - **Change ID:** soft-delete-transaction
@@ -220,7 +227,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** MVP dostarcza sam tombstone + filtrowanie z agregacji; recovery UX jest post-MVP (Otwarte pytanie #3), więc unknown nie blokuje. Filtr soft-delete musi objąć każdą agregację (S-02/S-03/S-04).
 - **Status:** proposed
 
-### S-07: Zarządzanie kategoriami
+### 🔴 S-07: Zarządzanie kategoriami
 
 - **Outcome:** user tworzy kategorię, zmienia jej nazwę i usuwa ją tylko gdy nie ma przypiętych transakcji; przy pustej liście widzi soft suggestion (nie blokujący prompt).
 - **Change ID:** category-management
@@ -232,7 +239,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Block-delete (FR-009) czyni rename (FR-008) jedyną ścieżką zmiany nazwy kategorii z transakcjami — obie muszą iść razem. Niezależny od transakcji (kategoria opcjonalna), stąd równoległy do kręgosłupa.
 - **Status:** proposed
 
-### S-08: Zarządzanie beneficjentami
+### 🔴 S-08: Zarządzanie beneficjentami
 
 - **Outcome:** user tworzy beneficjenta, zmienia jego nazwę i usuwa go tylko gdy żadna transakcja go nie wskazuje; beneficjent to dowolny entity (osoba z/bez profilu, wspólne, obiekt, projekt).
 - **Change ID:** beneficiary-management
@@ -244,7 +251,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Wzorzec lustrzany do kategorii (block-delete + rename). Auto-link profil→beneficjent (FR-022) powstał już w S-01; tu dochodzi ręczny CRUD pozostałych beneficjentów. Soft-delete + migracja zostają post-MVP.
 - **Status:** proposed
 
-### S-09: Filtr listy transakcji
+### 🔴 S-09: Filtr listy transakcji
 
 - **Outcome:** user filtruje listę transakcji po zakresie dat i/lub kategorii, rozszerzając domyślny scope bieżącego miesiąca z S-02.
 - **Change ID:** transaction-list-filter
@@ -256,7 +263,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Promowany do must-have (po 50+ transakcjach niezbędny). Wymaga kategorii (S-07) dla filtra po kategorii; w połączeniu z nawigacją miesięczną daje pełną kontrolę nad zakresem listy.
 - **Status:** proposed
 
-### S-10: Onboarding z portable media
+### 🔴 S-10: Onboarding z portable media
 
 - **Outcome:** user na nowym urządzeniu przechodzi onboarding: (1) ustalenie połączenia z bazą — wskazanie istniejącej LUB utworzenie nowej bazy (FR-023) z podpowiadaną lokalizacją (prefill); (2) jeśli baza ma profile → picker, w przeciwnym razie utworzenie pierwszego profilu; (3) wybrany profil zapisany jako sticky default per-device (w configu profilu); soft suggestion kategorii. Uruchomienie z nośnika bez instalatora.
 - **Change ID:** portable-onboarding
@@ -269,7 +276,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Onboarding connection-first (najpierw baza przez FR-023/F-03, potem profil) nad ziarnem z S-01; sticky default per-device w configu profilu (NIE na nośniku) realizuje "device = osoba". Wymaga F-04, bo AC US-02 ("bez instalatora z portable media") da się zweryfikować tylko na spakowanym app-image.
 - **Status:** proposed
 
-### S-11: Zmiana aktywnego profilu w sesji
+### 🔴 S-11: Zmiana aktywnego profilu w sesji
 
 - **Outcome:** user zmienia aktywny profil w dowolnym momencie sesji, bez zamykania aplikacji.
 - **Change ID:** switch-active-profile
@@ -281,7 +288,7 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 - **Risk:** Drobny slice domykający cykl życia profilu (user explicite: "zamykanie aplikacji tylko by zmienić profil jest bez sensu"). Zależny od pełnego zarządzania profilami z S-10.
 - **Status:** proposed
 
-### S-12: Ustawienia — baza i lokalizacja pliku danych
+### 🔴 S-12: Ustawienia — baza i lokalizacja pliku danych
 
 - **Outcome:** user w ustawieniach tworzy nową lub otwiera istniejącą bazę (FR-023, docelowy dom akcji) oraz zmienia lokalizację pliku danych; wybór jest persistowany w configu aplikacji (podpowiadany default, decyzja usera) i przenosi się wraz z nośnikiem.
 - **Change ID:** data-location-settings
@@ -297,23 +304,23 @@ Co jest już na miejscu w kodzie na dzień `2026-06-12` (automatycznie zbadane +
 
 | Roadmap ID | Change ID (ID zmiany)         | Suggested issue title (Proponowany tytuł zgłoszenia)       | Ready for `/10x-plan` (Gotowe do `/10x-plan`) | Notes (Notatki) |
 | ---------- | ----------------------------- | ---------------------------------------------------------- | --------------------- | ----- |
-| F-01       | testable-domain-harness       | Harness testów + testowalna warstwa domeny (headless)      | yes                   | Uruchom `/10x-plan testable-domain-harness` — zalecany pierwszy ruch |
-| F-02       | file-logging                  | Logowanie błędów i zdarzeń do pliku                        | yes                   | Równoległy do F-01/F-03 |
-| F-03       | portable-persistence-baseline | Przenośna persystencja: SQLite + atomic write + lokalizacja| yes                   | Kręgosłup S-01; równoległy do F-01/F-02 |
-| F-04       | portable-app-packaging        | Portable app-image (jpackage), uruchomienie bez instalatora| yes                   | Potrzebny do weryfikacji US-02 (S-10); można odłożyć |
-| F-05       | view-navigation-shell         | Szkielet nawigacji: shell + ostylowany sidebar + przełączanie | yes                   | Równoległy do F-01..F-04; Etap 2 (zwijanie) w Parked |
-| S-01       | first-transaction-persist     | Zapis pierwszej transakcji do bazy (Create, restart-safe)  | no                    | Czeka na F-01, F-02, F-03, F-05 |
-| S-02       | monthly-transaction-list      | Lista transakcji bieżącego miesiąca + nawigacja            | no                    | Czeka na S-01 |
-| S-03       | monthly-summary               | Podsumowanie miesięczne (suma per kategoria + totals)      | no                    | Blocked: decyzja "bez kategorii" (Otwarte pytanie #1) |
-| S-04       | yearly-summary                | Podsumowanie roczne z rozbiciem po miesiącach              | no                    | Blocked: jw. + czeka na S-03 |
-| S-05       | edit-transaction              | Edycja dowolnego pola transakcji                           | no                    | Czeka na S-01, S-02 |
-| S-06       | soft-delete-transaction       | Soft-delete transakcji + filtrowanie z agregacji           | no                    | Czeka na S-01, S-02 |
-| S-07       | category-management           | Kategorie: utwórz / zmień nazwę / usuń (jeśli pusta)       | no                    | Czeka na F-03, F-05; równoległy do S-01 |
-| S-08       | beneficiary-management        | Beneficjent: utwórz / zmień nazwę / usuń (jeśli bez transakcji) | no               | Czeka na S-01 |
-| S-09       | transaction-list-filter       | Filtr listy po zakresie dat i/lub kategorii                | no                    | Czeka na S-02, S-07 |
-| S-10       | portable-onboarding           | Onboarding: połączenie z bazą + picker/pierwszy profil + sticky | no               | Czeka na S-01, F-04 |
-| S-11       | switch-active-profile         | Zmiana aktywnego profilu w sesji                           | no                    | Czeka na S-10 |
-| S-12       | data-location-settings        | Ustawienia: tworzenie/otwieranie bazy + zmiana lokalizacji | no                    | Czeka na F-03, S-01 |
+| ✅ F-01    | testable-domain-harness       | Harness testów + testowalna warstwa domeny (headless)      | yes                   | Uruchom `/10x-plan testable-domain-harness` — zalecany pierwszy ruch |
+| ⚪ F-02    | file-logging                  | Logowanie błędów i zdarzeń do pliku                        | yes                   | Równoległy do F-01/F-03 |
+| ⚪ F-03    | portable-persistence-baseline | Przenośna persystencja: SQLite + atomic write + lokalizacja| yes                   | Kręgosłup S-01; równoległy do F-01/F-02 |
+| ⚪ F-04    | portable-app-packaging        | Portable app-image (jpackage), uruchomienie bez instalatora| yes                   | Potrzebny do weryfikacji US-02 (S-10); można odłożyć |
+| ✅ F-05    | view-navigation-shell         | Szkielet nawigacji: shell + ostylowany sidebar + przełączanie | yes                   | Równoległy do F-01..F-04; Etap 2 (zwijanie) w Parked |
+| 🔴 S-01    | first-transaction-persist     | Zapis pierwszej transakcji do bazy (Create, restart-safe)  | no                    | Czeka na F-01, F-02, F-03, F-05 |
+| 🔴 S-02    | monthly-transaction-list      | Lista transakcji bieżącego miesiąca + nawigacja            | no                    | Czeka na S-01 |
+| ❓ S-03    | monthly-summary               | Podsumowanie miesięczne (suma per kategoria + totals)      | no                    | Blocked: decyzja "bez kategorii" (Otwarte pytanie #1) |
+| ❓ S-04    | yearly-summary                | Podsumowanie roczne z rozbiciem po miesiącach              | no                    | Blocked: jw. + czeka na S-03 |
+| 🔴 S-05    | edit-transaction              | Edycja dowolnego pola transakcji                           | no                    | Czeka na S-01, S-02 |
+| 🔴 S-06    | soft-delete-transaction       | Soft-delete transakcji + filtrowanie z agregacji           | no                    | Czeka na S-01, S-02 |
+| 🔴 S-07    | category-management           | Kategorie: utwórz / zmień nazwę / usuń (jeśli pusta)       | no                    | Czeka na F-03, F-05; równoległy do S-01 |
+| 🔴 S-08    | beneficiary-management        | Beneficjent: utwórz / zmień nazwę / usuń (jeśli bez transakcji) | no               | Czeka na S-01 |
+| 🔴 S-09    | transaction-list-filter       | Filtr listy po zakresie dat i/lub kategorii                | no                    | Czeka na S-02, S-07 |
+| 🔴 S-10    | portable-onboarding           | Onboarding: połączenie z bazą + picker/pierwszy profil + sticky | no               | Czeka na S-01, F-04 |
+| 🔴 S-11    | switch-active-profile         | Zmiana aktywnego profilu w sesji                           | no                    | Czeka na S-10 |
+| 🔴 S-12    | data-location-settings        | Ustawienia: tworzenie/otwieranie bazy + zmiana lokalizacji | no                    | Czeka na F-03, S-01 |
 
 ## Open Roadmap Questions (Otwarte pytania roadmapy)
 
