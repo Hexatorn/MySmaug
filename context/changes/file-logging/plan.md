@@ -187,6 +187,38 @@ testem — trzeba dopisać minimalną atrapę i doprowadzić do porażki **aserc
 Dla testów wyprowadzanych z kodu (`ResourcesTest`) inscenizacja czerwieni
 obowiązuje zawsze.
 
+**Skill wykonawczy: `/10x-tdd`, wszystkie siedem faz.** Dyscyplina czerwieni
+powyżej to dokładnie jego kontrakt (red→green→refactor), a każda faza dowozi
+test — nie ma tu fazy czysto konfiguracyjnej, którą prowadziłby
+`/10x-implement`. Kolumna „Reżim testu" w tabeli mówi o **narzędziu** (JUnit vs
+TestFX), nie o trybie pracy: TestFX to test UI na toolkicie desktopowym, więc
+Fazy 5-7 **nie** idą przez `/10x-e2e` (ten skill obsługuje testy
+przeglądarkowe). Po domknięciu ostatniej fazy: `/10x-impl-review`, potem
+`/10x-archive`. Zapisane wprost zgodnie z lekcją `lessons.md:96-101`.
+
+**Aneks (2026-07-30): nazwy klas po angielsku.** Plan nazywa klasy po polsku
+(`LogowanieTest`, `Diagnostyka`, `HandlerWyjatkow`, `DialogBledu`,
+`StanLogowania`). Utrwalona konwencja repo jest inna i została zauważona dopiero
+przy pisaniu pierwszego testu: **nazwy typów są angielskie**
+(`MySmaugApplication`, `MainController`, `ThemeManager`, `WindowResizeHelper`,
+`ResourcesTest`, `ShellTest`), a **wnętrze polskie** — metody, pola, stałe,
+komentarze i komunikaty asercji. Decyzja usera przy starcie Fazy 1: idziemy za
+kodem, nie za planem. Obowiązujące nazwy:
+
+| Nazwa w planie | Nazwa w kodzie |
+| --- | --- |
+| `LogowanieTest` | `LoggingTest` |
+| `Diagnostyka` / `DiagnostykaTest` | `Diagnostics` / `DiagnosticsTest` |
+| `RotacjaTest` | `RotationTest` |
+| `HandlerWyjatkow` / `HandlerWyjatkowTest` | `ExceptionHandler` / `ExceptionHandlerTest` |
+| `PasekStatusuTest` | `StatusBarTest` |
+| `DialogBledu` / `DialogBleduTest` | `ErrorDialog` / `ErrorDialogTest` |
+| `StanLogowania` / `StanLogowaniaTest` | `LoggingState` / `LoggingStateTest` |
+
+Tytuły kroków w `## Progress` zostają bez zmian (konwencja sekcji zabrania ich
+edycji) — czytaj je przez to mapowanie. Zmiana dotyczy wyłącznie nazw typów;
+polskie nazwy metod i komunikaty asercji zostają.
+
 ## Critical Implementation Details
 
 **Logback jest zależnością wyłącznie runtime'ową — pod JPMS to pułapka.** Kod
@@ -343,6 +375,23 @@ komunikaty.
   (patrz `## Critical Implementation Details`)
 - `log/` nie pojawia się w `git status` po uruchomieniu aplikacji
 
+**Aneks (2026-07-30): dowód grafu modułów przeniesiony do Fazy 2.** Dwa ostatnie
+kryteria manualne tej fazy — `javafx:run` tworzy `log/mysmaug.log` z realną
+treścią oraz brak `log/` w `git status` — okazały się **niewykonalne w Fazie 1**.
+Powód: faza świadomie nie wprowadza żadnej treści domenowej, więc kod produkcyjny
+nie woła loggera ani razu. SLF4J wiąże implementację leniwie, przy pierwszym
+`LoggerFactory.getLogger(...)`, a Logback otwiera plik dopiero przy starcie
+appendera — w tym samym momencie. Bez wywołania plik nie powstaje, więc nie ma
+czego oglądać ani w katalogu, ani w `git status`. Kolejność faz („fundament bez
+treści domenowych") zderzyła się tu z bramką, która treści wymaga; plan tego nie
+przewidział. Decyzja usera: przenieść oba kryteria do Fazy 2, gdzie wpis o
+starcie sesji czyni je dowodliwymi wprost — jako 2.9 i 2.10. Skutek do
+odnotowania: **jedyna niewiadoma techniczna planu** (czy `requires
+ch.qos.logback.classic` faktycznie wciąga implementację do grafu) pozostaje
+nierozstrzygnięta na wyjściu z Fazy 1. Testy jej nie rozstrzygają — Maven dokłada
+czytelność zależności testowych sam, co widać po tym, że `LoggingTest`
+skompilował się i przeszedł, zanim `module-info.java` w ogóle wspomniał o SLF4J.
+
 **Implementation Note**: Po domknięciu fazy i zieleni testów automatycznych
 zatrzymaj się na potwierdzenie manualne, zanim przejdziesz do Fazy 2.
 
@@ -440,6 +489,13 @@ brakuje. Bez `@Tag("ui")`.
 - Wymuszenie błędu ładowania widoku (tymczasowa literówka w ścieżce FXML w
   `MainController.Section`) produkuje wpis ERROR z nazwą sekcji i ścieżką; po
   przywróceniu wpis znika
+
+- **Przeniesione z Fazy 1** (patrz aneks tamtej fazy): empiryczne potwierdzenie
+  rozwiązania grafu modułów — `./mvnw.cmd javafx:run` tworzy `log/mysmaug.log` z
+  realną treścią. Dopiero wpis o starcie sesji z tej fazy czyni to dowodliwym;
+  sama kompilacja ani zielone testy tego nie dowodzą
+- **Przeniesione z Fazy 1**: `log/` nie pojawia się w `git status` po uruchomieniu
+  aplikacji
 
 **Implementation Note**: Zatrzymaj się na potwierdzenie manualne przed Fazą 3.
 
@@ -991,18 +1047,18 @@ Zapisy dla przyszłych zmian, żeby decyzje nie wyparowały z rozmowy
 
 #### Automated
 
-- [ ] 1.1 Kompilacja przechodzi: `./mvnw.cmd -q compile`
-- [ ] 1.2 Cały zestaw testów zielony: `./mvnw.cmd test`
-- [ ] 1.3 `LogowanieTest` dowodzi, że plik logu powstaje i zawiera zalogowany komunikat
-- [ ] 1.4 `LogowanieTest` dowodzi, że polskie diakrytyki przeżywają zapis i odczyt
-- [ ] 1.5 `ResourcesTest` zielony, z nową podłogą dla `logback.xml`
+- [x] 1.1 Kompilacja przechodzi: `./mvnw.cmd -q compile` — 9f5d352
+- [x] 1.2 Cały zestaw testów zielony: `./mvnw.cmd test` — 9f5d352
+- [x] 1.3 `LogowanieTest` dowodzi, że plik logu powstaje i zawiera zalogowany komunikat — 9f5d352 (klasa nazwana `LoggingTest`, patrz aneks o nazwach)
+- [x] 1.4 `LogowanieTest` dowodzi, że polskie diakrytyki przeżywają zapis i odczyt — 9f5d352 (klasa nazwana `LoggingTest`)
+- [x] 1.5 `ResourcesTest` zielony, z nową podłogą dla `logback.xml` — 9f5d352
 
 #### Manual
 
-- [ ] 1.6 Inscenizacja czerwieni dla `LogowanieTest` — porażka asercji, nie kompilacji
-- [ ] 1.7 Inscenizacja czerwieni dla podłogi `logback.xml`
-- [ ] 1.8 Empiryczne potwierdzenie rozwiązania grafu modułów — `javafx:run` tworzy plik z treścią
-- [ ] 1.9 `log/` nie pojawia się w `git status` po uruchomieniu aplikacji
+- [x] 1.6 Inscenizacja czerwieni dla `LogowanieTest` — porażka asercji, nie kompilacji — 9f5d352 (SLF4J bez implementacji wpiął logger NOP; padła asercja „plik logu nie powstał")
+- [x] 1.7 Inscenizacja czerwieni dla podłogi `logback.xml` — 9f5d352 (plik wyniesiony poza drzewo + przebieg z `clean`; padł wyłącznie nowy test podłogi)
+- [x] 1.8 Empiryczne potwierdzenie rozwiązania grafu modułów — `javafx:run` tworzy plik z treścią — niewykonalne w tej fazie, przeniesione do Fazy 2 jako 2.9 (patrz aneks Fazy 1)
+- [x] 1.9 `log/` nie pojawia się w `git status` po uruchomieniu aplikacji — przeniesione do Fazy 2 jako 2.10 (patrz aneks Fazy 1)
 
 ### Phase 2: Zdarzenia diagnostyczne i istniejące błędy
 
@@ -1019,6 +1075,8 @@ Zapisy dla przyszłych zmian, żeby decyzje nie wyparowały z rozmowy
 - [ ] 2.6 Uruchomienie i zamknięcie zostawia nagłówek, wpis o starcie i wpis o zakończeniu
 - [ ] 2.7 Ścieżka logu z nagłówka wskazuje plik, który faktycznie czytasz
 - [ ] 2.8 Wymuszony błąd ładowania widoku produkuje wpis ERROR z sekcją i ścieżką
+- [ ] 2.9 Empiryczne potwierdzenie rozwiązania grafu modułów — `javafx:run` tworzy plik z treścią (przeniesione z Fazy 1)
+- [ ] 2.10 `log/` nie pojawia się w `git status` po uruchomieniu aplikacji (przeniesione z Fazy 1)
 
 ### Phase 3: Rotacja i przepełnienie pliku
 

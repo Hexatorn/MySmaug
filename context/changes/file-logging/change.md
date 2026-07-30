@@ -1,9 +1,9 @@
 ---
 change_id: file-logging
 title: File logging
-status: plan_reviewed
+status: implementing
 created: 2026-07-29
-updated: 2026-07-29
+updated: 2026-07-30
 archived_at: null
 ---
 
