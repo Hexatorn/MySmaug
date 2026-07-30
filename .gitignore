@@ -47,3 +47,8 @@ CLAUDE_ccinit.md
 ### Kopie zapasowe (/hex-translate) ###
 backup/
 
+### Logi aplikacji ###
+# Powstaje w katalogu roboczym procesu przy uruchomieniu (mvn javafx:run — korzeń projektu).
+# Logi z testów idą do target/test-logs/ i są już objęte wpisem target/ na górze tego pliku.
+log/
+

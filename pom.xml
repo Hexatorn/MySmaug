@@ -12,6 +12,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.12.1</junit.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <logback.version>1.5.18</logback.version>
     </properties>
 
     <dependencies>
@@ -41,6 +43,27 @@
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-materialdesign2-pack</artifactId>
             <version>12.4.0</version>
+        </dependency>
+
+        <!-- API logowania. Kod dotyka wyłącznie tego artefaktu; implementacja (Logback) dokłada się
+             osobno i nie jest wymieniona w żadnym imporcie. Deklaracja bezpośrednia, mimo że
+             logback-classic wciąga slf4j-api przechodnio — ten sam powód, który komentarz przy
+             Hamcreście opisuje niżej: kontrola nad tym, co trafia na module-path. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Implementacja pod API. Nie pojawia się w żadnym imporcie — SLF4J znajduje ją przez
+             ServiceLoader. Pod JPMS to pułapka: skoro nic jej nie wymaga, graf modułów jej nie
+             wciągnie i logowanie zamilknie BEZ błędu kompilacji. Stąd jawne
+             `requires ch.qos.logback.classic` w module-info.java. Ma prawdziwy module-info
+             (nie tylko Automatic-Module-Name), więc jlink w F-04 go obsłuży. -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
         <dependency>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Konfiguracja logowania obowiązująca WYŁĄCZNIE w testach: Logback czyta logback-test.xml
+  z pierwszeństwem przed logback.xml. Dwa skutki, oba zamierzone — przebiegi testów nie
+  zaśmiecają katalogu log/ w repo i nie walczą z uruchomioną aplikacją o ten sam plik.
+
+  Plik leży w src/test/resources, którego ResourcesTest nie skanuje (skaner czyta
+  src/main/resources), więc nie zgłosi się jako zasób osierocony.
+-->
+<configuration>
+
+    <appender name="PLIK" class="ch.qos.logback.core.FileAppender">
+        <file>target/test-logs/mysmaug-test.log</file>
+        <!-- Dopisywanie, nie nadpisywanie: test czyta plik po zapisie, a znacznik unikalny
+             dla przebiegu odróżnia bieżący wpis od historii. -->
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+            <!-- Bez tego Logback pisze w domyślnym kodowaniu platformy — na polskim Windowsie
+                 cp1250 — i diakrytyki rozsypują się już na zapisie, zanim test zdąży je odczytać. -->
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="KONSOLA" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="PLIK"/>
+        <appender-ref ref="KONSOLA"/>
+    </root>
+</configuration>

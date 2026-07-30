@@ -94,6 +94,21 @@ class ResourcesTest {
     private static final Pattern ODWOLANIE_FXML =
             Pattern.compile("=\"(@?[^\"\\s]*\\.(?:" + ALTERNATYWA + "))\"");
 
+    /**
+     * Zasoby świadomie wyjęte z kierunku zasób&rarr;kod, bo ładuje je nie nasz kod, tylko
+     * biblioteka — literału ze ścieżką nie ma i nie będzie, więc zgłaszałyby się jako sieroty
+     * przy każdym przebiegu.
+     *
+     * <p>Wyjątek jest <b>nazwany</b>, nie blankietowy (nie „wszystkie {@code .xml}"): każda
+     * <b>następna</b> sierota ma nadal zapalać test. Cena tego wyjęcia jest spłacona osobną
+     * podłogą — każdy wpis tutaj musi mieć własny test obecności, inaczej zasób zostałby bez
+     * jakiegokolwiek strażnika.
+     */
+    private static final Set<String> LADOWANE_PRZEZ_BIBLIOTEKE = Set.of(
+            // Logback szuka konfiguracji autodetekcją na classpathie.
+            // Podłoga: konfiguracjaLogowaniaJestWidocznaNaClasspath().
+            "/logback.xml");
+
     @Test
     void skanerZnajdujeOdwolaniaDoZasobow() throws IOException {
         assertThat(KATALOG_JAVA)
@@ -114,6 +129,23 @@ class ResourcesTest {
         assertThat(odwolania)
                 .as("Brak odwołania do arkusza stylów — skaner przestał widzieć CSS")
                 .anyMatch(odwolanie -> odwolanie.endsWith(".css"));
+    }
+
+    /**
+     * Podłoga dla konfiguracji logowania — zasobu wyjętego z kierunku zasób&rarr;kod, bo ładuje go
+     * Logback autodetekcją, a nie literał w kodzie.
+     *
+     * <p>Awaria, przed którą chroni, jest cicha: bez tego pliku Logback nie zgłasza błędu ani nie
+     * rzuca wyjątku, tylko konfiguruje sam siebie domyślnie i logowanie przestaje robić to, czego
+     * od niego oczekujemy. Nic w aplikacji nie zauważy różnicy aż do chwili, gdy ktoś sięgnie po
+     * plik logu i go nie znajdzie.
+     */
+    @Test
+    void konfiguracjaLogowaniaJestWidocznaNaClasspath() {
+        assertThat(ResourcesTest.class.getResource("/logback.xml"))
+                .as("Brak logback.xml na classpathie — Logback zejdzie na konfigurację domyślną,"
+                        + " a plik logu nie powstanie. Bez błędu i bez wyjątku: logowanie milczy")
+                .isNotNull();
     }
 
     /**
@@ -149,6 +181,7 @@ class ResourcesTest {
     Stream<DynamicTest> kazdyZasobNaDyskuJestUzywanyPrzezKod() throws IOException {
         Set<String> odwolania = skanujOdwolania();
         return zasobyNaDysku().stream()
+                .filter(zasob -> !LADOWANE_PRZEZ_BIBLIOTEKE.contains(zasob))
                 .map(zasob -> DynamicTest.dynamicTest(zasob, () ->
                         assertThat(odwolania)
                                 .as("Zasób leży w src/main/resources, ale żadne odwołanie w kodzie"
