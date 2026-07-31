@@ -2,6 +2,7 @@ package hexatorn.mysmaug.app;
 
 import hexatorn.mysmaug.controller.MainController;
 import hexatorn.mysmaug.logging.Diagnostics;
+import hexatorn.mysmaug.logging.LogRotation;
 import hexatorn.mysmaug.tools.ThemeManager;
 import hexatorn.mysmaug.tools.WindowResizeHelper;
 import javafx.application.Application;
@@ -24,8 +25,14 @@ public class MySmaugApplication extends Application {
     private static final String FXML_SHELL = "/hexatorn/mysmaug/controller/main-view.fxml";
     private static final String IKONA_APLIKACJI = "/hexatorn/mysmaug/app-icon.png";
     private static final Path KATALOG_LOGOW = Path.of("log");
+    private static final Path PLIK_LOGU = KATALOG_LOGOW.resolve("mysmaug.log");
+    private static final double PROG_ROTACJI_MB = 1.0;
+    private static final int LIMIT_ARCHIWALNYCH = 2;
 
-    private static final Logger log = LoggerFactory.getLogger(MySmaugApplication.class);
+    // Nie static-final z inline-inicjalizacją: LoggerFactory.getLogger(...) wiąże Logbacka i otwiera
+    // plik logu w tym samym momencie (Faza 1). Pole musi zostać przypisane w init() PO sondzie
+    // rotacji — inaczej rotacja próbowałaby przenieść plik, który appender ma już otwarty do zapisu.
+    private Logger log;
 
     /**
      * Składa scenę shella: wczytuje main-view.fxml i wstrzykuje ThemeManager do kontrolera.
@@ -73,6 +80,10 @@ public class MySmaugApplication extends Application {
     @Override
     public void init() {
         sondujKatalogLogow();
+        // Czyste I/O, bez wywołania SLF4J — musi paść przed poniższym getLogger(...), inaczej
+        // Logback zdąży otworzyć plik logu pierwszy (patrz komentarz przy polu log).
+        LogRotation.obrocJesliZaDuzy(PLIK_LOGU, PROG_ROTACJI_MB, LIMIT_ARCHIWALNYCH);
+        log = LoggerFactory.getLogger(MySmaugApplication.class);
         Diagnostics.zalogujNaglowekStartowy(log);
     }
 

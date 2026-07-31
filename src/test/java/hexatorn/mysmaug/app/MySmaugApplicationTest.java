@@ -15,6 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * na instancji, bez {@code Application.launch()}: {@code init()} z definicji biegnie PRZED startem
  * toolkitu JavaFX, {@code stop()} tylko woła {@code Diagnostics} — żadne nie potrzebuje TestFX.
  *
+ * <p>Od Fazy 3 {@code stop()} korzysta z pola {@code log} przypisywanego w {@code init()} (patrz
+ * komentarz przy tym polu) — dokładnie tak, jak realny cykl życia JavaFX zawsze woła {@code init()}
+ * przed {@code stop()}, więc test odwzorowuje tę kolejność zamiast wołać {@code stop()} w pełnej
+ * izolacji od {@code init()}.
+ *
  * <p>Bez {@code @Tag("ui")}. Pisze do {@code target/test-logs/}, tak jak {@code DiagnosticsTest}.
  */
 class MySmaugApplicationTest {
@@ -35,7 +40,9 @@ class MySmaugApplicationTest {
 
     @Test
     void stopLogujeKoniecSesji() throws IOException {
-        new MySmaugApplication().stop();
+        MySmaugApplication aplikacja = new MySmaugApplication();
+        aplikacja.init();
+        aplikacja.stop();
 
         String tresc = Files.readString(PLIK_LOGU, StandardCharsets.UTF_8);
 
