@@ -510,45 +510,108 @@ Osobna faza, bo „konfiguracja mówi `maxFileSize=1MB`" jest założeniem, a do
 wymaga faktycznego zapełnienia pliku — czyli innego rodzaju testu niż reszta
 fundamentu.
 
+### Aneks (2026-07-31): mechanizm rotacji zmieniony — sonda startowa zamiast RollingFileAppender
+
+Pierwotny kontrakt (appender rotujący `RollingFileAppender` + `FixedWindowRollingPolicy`)
+celował w klasę, którą aktualna dokumentacja Logbacka (sprawdzona przez `ctx7`,
+Logback Manual, wersja zgodna z zależnością w `pom.xml:16` — 1.5.18) oznacza jako
+**deprecated**: „potential issues with file renaming" — ryzyko systemowe
+(zwłaszcza na Windows, gdzie nie da się zmienić nazwy pliku mającego otwarty
+uchwyt zapisu), nie błąd tego planu.
+
+Decyzja usera: mechanizm prostszy i celowo unikający właśnie tego ryzyka —
+sprawdzenie rozmiaru pliku logu **wyłącznie przy starcie aplikacji**, przed
+otwarciem go do zapisu. Żadnej podmiany plików w trakcie działania sesji.
+
+**Odkrycie przy projektowaniu, które zmienia też kod z Fazy 2:** pole
+`MySmaugApplication.log` jest dziś `private static final Logger log =
+LoggerFactory.getLogger(...)` — inicjalizowane przy **ładowaniu klasy**, czyli
+przed ciałem `init()`. Faza 1 potwierdziła empirycznie (patrz aneks tamtej fazy),
+że Logback otwiera plik logu w tym samym momencie, w którym pada pierwszy
+`LoggerFactory.getLogger(...)` w całej JVM. Skutek: dzisiejszy kod **już** otwiera
+plik logu, zanim `init()` zdąży cokolwiek sprawdzić — sonda rotacji wstawiona na
+początek ciała `init()` przyszłaby za późno. Rozwiązanie: `log` przestaje być
+polem statycznym z inline-inicjalizacją i staje się przypisywany jako pierwsza
+instrukcja w `init()`, ale **po** sondzie rotacji — sonda jest czystym I/O
+(`Files`), bez żadnego wywołania SLF4J, więc sama niczego nie wyzwala.
+
+**Skutek dla kontraktu tej fazy:** `logback.xml` i `logback-test.xml` **nie
+zmieniają się** — appender pozostaje zwykłym `FileAppender` z Fazy 1. Zamiast
+tego dochodzi nowa klasa `LogRotation` oraz zmiana kolejności/typu pola `log` w
+`MySmaugApplication.java`. Limit trzech plików razem (aktywny + dwa archiwalne)
+ze stanu docelowego planu realizowany jest przycinaniem archiwów w tej samej
+klasie, nie przez `FixedWindowRollingPolicy`. Nazwa klasy jest od razu angielska
+(bez pośredniej polskiej nazwy w tabeli z Fazy 1) — to świeżo pisany tekst, nie
+ma czego tłumaczyć.
+
+**Aneks (2026-07-31, doprecyzowanie w trakcie implementacji): przycinanie
+rozpoznaje własne archiwa po nazwie, nie „wszystko oprócz aktywnego pliku".**
+Manualne testowanie ujawniło realną usterkę pierwszej wersji `przytnijArchiwa`:
+traktowała każdy plik w katalogu logów poza aktywnym jako kandydata do
+przycięcia. Obcy plik pozostawiony w `log/` (np. przez użytkownika) mógł zostać
+**bezpowrotnie skasowany** przy najbliższej rotacji, jeśli akurat okazał się
+najstarszy w katalogu. Naprawione test-first: `RotationTest` dostał piąty
+przypadek (`obcePlikiWKatalogNieSaUsuwanePrzyPrzycinaniu`), `LogRotation`
+rozpoznaje własne archiwa wzorcem nazwy (`<rdzeń>-\d{8}_\d{6}<rozszerzenie>`),
+nie samą różnicą względem ścieżki aktywnego pliku.
+
+**Aneks (2026-07-31, drugie doprecyzowanie): kolejność przycinania oparta na
+znaczniku w nazwie, nie na czasie modyfikacji pliku.** Pierwsza wersja
+`przytnijArchiwa` sortowała archiwa po `Files.getLastModifiedTime` — metadanym
+mutowalnym przez kogokolwiek (np. otwarcie i dopisanie znaku do starego
+archiwum zmienia jego `mtime`), co mogło doprowadzić do usunięcia **złego**
+pliku przy przycinaniu. Naprawione test-first: `RotationTest` dostał szósty
+przypadek (`przycinanieOpierASieNaZnacznikuCzasuZNazwyNieNaCzasieModyfikacji`),
+`wzorzecNazwyArchiwum` dostał grupę przechwytującą na znacznik czasu,
+`przytnijArchiwa` sortuje po sparsowanym `LocalDateTime` z nazwy pliku.
+
 ### Changes Required
 
-#### 1. Appender rotujący
+#### 1. Mechanizm rotacji
 
-**File**: `src/main/resources/logback.xml`
+**File**: `src/main/java/hexatorn/mysmaug/logging/LogRotation.java`
 
-**Intent**: Trzymać twardy sufit rozmiaru historii (~3 MB), żeby log nie zjadał
-nośnika, a jednocześnie zachować wpisy sprzed poprzednich uruchomień.
+**Intent**: Wykryć zbyt duży plik logu **przy starcie**, zanim cokolwiek go
+otworzy do zapisu, i odsunąć go na bok pod nazwą z dopisaną datą — bez podmiany
+pliku w trakcie działania aplikacji (patrz aneks powyżej).
 
-**Contract**: `RollingFileAppender` z `FixedWindowRollingPolicy`
-(`minIndex=1`, `maxIndex=2` — plik aktywny plus dwa archiwalne daje trzy) oraz
-`SizeBasedTriggeringPolicy` z `maxFileSize=1MB`. Element `<file>` pozostaje
-**obowiązkowy**, mimo że dubluje informację z `fileNamePattern` — dokumentacja
-Logbacka mówi to wprost i łatwo o tym zapomnieć. `append` i `charset` bez zmian.
+**Contract**: Metoda statyczna przyjmująca ścieżkę pliku logu, próg w bajtach i
+limit plików archiwalnych. Gdy plik nie istnieje albo mieści się w progu — nic nie
+robi. Gdy przekracza próg — `Files.move` na nazwę z dopisaną datą i czasem
+(sufiks sortowalny leksykograficznie = chronologicznie), potem przycina katalog
+do limitu, usuwając najstarsze nadmiarowe archiwa. Porażka (np. brak uprawnień)
+jest **połykana** — ta sama zasada co `sondujKatalogLogow` w
+`MySmaugApplication.java:100-106`: rotacja nie może przerwać startu aplikacji.
 
-#### 2. Konfiguracja testowa ze zmniejszonym progiem
+#### 2. Wpięcie w start aplikacji
 
-**File**: `src/test/resources/logback-test.xml`
+**File**: `src/main/java/hexatorn/mysmaug/app/MySmaugApplication.java`
 
-**Intent**: Dowód przepełnienia bez zapisywania megabajta na każdym przebiegu
-testów.
+**Intent**: Uruchomić sondę rotacji zanim padnie pierwszy
+`LoggerFactory.getLogger(...)` w całej JVM (patrz aneks powyżej — inaczej Logback
+zdąży otworzyć plik pierwszy).
 
-**Contract**: Ten sam `RollingFileAppender` z `maxFileSize` zmniejszonym do
-kilku kilobajtów. Zmniejszenie progu nie zmienia mechanizmu, który jest przedmiotem
-dowodu — zmienia tylko koszt jego uruchomienia. Ta różnica musi być skomentowana w
-pliku, żeby nie wyglądała na rozjazd konfiguracji.
+**Contract**: Wywołanie `LogRotation.obrocJesliZaDuzy(...)` w `init()`, po
+`sondujKatalogLogow()` (potrzebuje istniejącego katalogu) i **przed**
+przypisaniem pola `log`. Pole `log` przestaje być `static final` z
+inline-inicjalizacją; staje się przypisywane jako pierwsza instrukcja
+`LoggerFactory.getLogger(...)` zaraz po sondzie rotacji, w `init()`. `stop()`
+korzysta z tego samego pola instancyjnego bez zmian w swojej treści.
 
 #### 3. Test rotacji
 
 **File**: `src/test/java/hexatorn/mysmaug/logging/RotacjaTest.java`
 
 **Intent**: Dowieść dwóch rzeczy naraz: rotacja zachodzi po przekroczeniu progu
-**oraz** liczba plików jest ograniczona.
+**oraz** liczba plików jest ograniczona — bez uruchamiania Logbacka i bez
+toolkitu JavaFX, bo `LogRotation` operuje na plikach niezależnie od biblioteki
+logującej.
 
-**Contract**: Test pisany przed podmianą appendera. Zapisuje dość wpisów, by
-przekroczyć próg wielokrotnie, potem asercjonuje: (a) plik archiwalny istnieje,
-(b) liczba plików logu nie przekracza limitu, (c) plik aktywny zawiera **najnowszy**
-wpis. Punkt (c) jest istotny — bez niego test przeszedłby także dla implementacji,
-która rotuje w złą stronę. Bez `@Tag("ui")`.
+**Contract**: Test pisany przed implementacją, na plikach w `@TempDir`.
+Przypadki: (a) plik poniżej progu — brak zmiany, (b) plik powyżej progu —
+zniknięcie z oryginalnej ścieżki i pojawienie się archiwum z tą samą treścią,
+(c) liczba archiwów przekraczająca limit — przycięcie do limitu, z zachowaniem
+**najnowszych**, (d) brak pliku — brak wyjątku, brak efektu. Bez `@Tag("ui")`.
 
 ### Success Criteria
 
@@ -556,18 +619,24 @@ która rotuje w złą stronę. Bez `@Tag("ui")`.
 
 - Kompilacja przechodzi: `./mvnw.cmd -q compile`
 - Cały zestaw testów zielony: `./mvnw.cmd test`
-- `RotacjaTest` dowodzi powstania pliku archiwalnego po przekroczeniu progu
-- `RotacjaTest` dowodzi, że liczba plików logu jest ograniczona
-- `RotacjaTest` dowodzi, że najnowszy wpis jest w pliku aktywnym
+- `RotacjaTest` dowodzi, że plik przekraczający próg zostaje odsunięty jako
+  archiwum (zniknięcie z oryginalnej ścieżki, treść zachowana)
+- `RotacjaTest` dowodzi, że liczba plików archiwalnych jest ograniczona do
+  zadanego limitu, z zachowaniem najnowszych
+- `RotacjaTest` dowodzi, że plik poniżej progu i brak pliku nie wywołują żadnej
+  zmiany
 
 #### Manual Verification
 
-- Inscenizacja czerwieni: przed podmianą appendera `RotacjaTest` pada na asercji
-  o braku pliku archiwalnego (zwykły `FileAppender` nie rotuje)
-- Przegląd `logback.xml` vs `logback-test.xml`: różni je **wyłącznie** próg
-  rozmiaru i ścieżka, a komentarz w pliku testowym to wyjaśnia
-- Weryfikacja arytmetyki na żywym pliku: po wymuszeniu rotacji w katalogu `log/`
-  leży dokładnie tyle plików, ile zakłada polityka — nie o jeden więcej
+- Inscenizacja czerwieni: przed implementacją `LogRotation` test pada na
+  asercji o braku archiwum (metody jeszcze nie ma / nie robi nic)
+- Przegląd `LogRotation`: rotacja to zwykła klasa Javy operująca na plikach;
+  `logback.xml`/`logback-test.xml` pozostają bez zmian z Fazy 1 — komentarz w
+  kodzie klasy wyjaśnia, dlaczego rotacja dzieje się tylko przy starcie
+- Weryfikacja arytmetyki na żywej aplikacji: ręczne powiększenie
+  `log/mysmaug.log` powyżej progu, potem `./mvnw.cmd javafx:run` — po starcie w
+  `log/` leży dokładnie tyle plików, ile zakłada polityka (aktywny + limit
+  archiwalnych), nie o jeden więcej
 
 **Implementation Note**: Zatrzymaj się na potwierdzenie manualne przed Fazą 4.
 
@@ -1087,17 +1156,17 @@ Zapisy dla przyszłych zmian, żeby decyzje nie wyparowały z rozmowy
 
 #### Automated
 
-- [ ] 3.1 Kompilacja przechodzi: `./mvnw.cmd -q compile`
-- [ ] 3.2 Cały zestaw testów zielony: `./mvnw.cmd test`
-- [ ] 3.3 `RotacjaTest` dowodzi powstania pliku archiwalnego po przekroczeniu progu
-- [ ] 3.4 `RotacjaTest` dowodzi, że liczba plików logu jest ograniczona
-- [ ] 3.5 `RotacjaTest` dowodzi, że najnowszy wpis jest w pliku aktywnym
+- [x] 3.1 Kompilacja przechodzi: `./mvnw.cmd -q compile` — cf202c2
+- [x] 3.2 Cały zestaw testów zielony: `./mvnw.cmd test` — cf202c2
+- [x] 3.3 `RotacjaTest` dowodzi, że plik przekraczający próg zostaje odsunięty jako archiwum — cf202c2
+- [x] 3.4 `RotacjaTest` dowodzi, że liczba plików archiwalnych jest ograniczona do limitu, z zachowaniem najnowszych — cf202c2
+- [x] 3.5 `RotacjaTest` dowodzi, że plik poniżej progu i brak pliku nie wywołują żadnej zmiany — cf202c2
 
 #### Manual
 
-- [ ] 3.6 Inscenizacja czerwieni — `RotacjaTest` pada na braku pliku archiwalnego
-- [ ] 3.7 Przegląd `logback.xml` vs `logback-test.xml` — różni je tylko próg i ścieżka, z komentarzem
-- [ ] 3.8 Weryfikacja arytmetyki na żywym pliku — dokładnie tyle plików, ile zakłada polityka
+- [x] 3.6 Inscenizacja czerwieni — `RotacjaTest` pada na braku archiwum przed implementacją `LogRotation` — cf202c2
+- [x] 3.7 Przegląd `LogRotation` — appender w `logback.xml`/`logback-test.xml` bez zmian z Fazy 1 — cf202c2
+- [x] 3.8 Weryfikacja arytmetyki na żywej aplikacji — ręczne powiększenie pliku, potem `javafx:run`, dokładnie tyle plików ile zakłada polityka — cf202c2
 
 ### Phase 4: Handler nieobsłużonych wyjątków
 

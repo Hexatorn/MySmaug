@@ -99,3 +99,10 @@
 - **Problem**: Plan F-02 `file-logging` ani razu nie nazywa skilla wykonawczego, choć wszystkie 7 faz wymaga „inscenizacji czerwieni" (test przed kodem) — wymóg rozsypany po korpusie (`plan.md:183`, 317) i po `## Progress` jako checkboxy 1.6, 2.5, 3.6, 4.5, 5.7, 6.8, 7.7. Odpowiedź „to jest `/10x-tdd`" trzeba było odtworzyć czytaniem i grepem, i trzeba ją odtwarzać przy każdym powrocie do change'u. Realny koszt błędu: `/10x-implement` puszczony na takim planie nie inscenizuje czerwieni, więc zostawia siedem kryteriów manualnych nie do odhaczenia uczciwie — a jedyny skill, który plan nazywa (`/10x-impl-review`, linia 871), jest tym, który to wychwyci dopiero po fakcie.
 - **Rule**: W planie nazywaj skill wykonawczy **jawnie** — w `Implementation Note` fazy albo, gdy cały plan idzie jednym trybem, raz w sekcji `Approach` z adnotacją przy fazach-wyjątkach. Nie zostawiaj tego do wywnioskowania z kryteriów sukcesu. Faza wymagająca dyscypliny czerwieni to `/10x-tdd`; faza bez dowożonego testu (konfiguracja, migracja, scaffold) to `/10x-implement`; faza z testem przeglądarkowym to `/10x-e2e` — TestFX i inne testy UI na toolkicie desktopowym **nie są** `/10x-e2e`. `/10x-plan-review` traktuje brak tego wskazania jako lukę w kompletności planu.
 - **Applies to**: plan, plan-review, implement, tdd, e2e
+
+## Planuj kolejność prac tak aby wszystkie wpisane punkty w Progres były możliwe do wykonania bez cofania postępu
+
+- **Context**: W Progres są testy manualne po implementacji, których użytkownik (Ja) nie zauważyłem. Claude Code poleciał z implementacją nie robiąc przerwy na testy.
+- **Problem**: Testy niemożliwe do wykonania bez przywracania stanu sprzed implementacji
+- **Rule**: Planuj kolejność prac tak aby wszystkie wpisane punkty w Progres były możliwe do wykonania bez cofania postępu.
+- **Applies to**: implement, tdd
