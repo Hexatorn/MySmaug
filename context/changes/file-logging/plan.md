@@ -1064,24 +1064,24 @@ Zapisy dla przyszłych zmian, żeby decyzje nie wyparowały z rozmowy
 
 #### Automated
 
-- [x] 2.1 Kompilacja przechodzi: `./mvnw.cmd -q compile`
-- [x] 2.2 Cały zestaw testów zielony: `./mvnw.cmd test`
-- [x] 2.3 `DiagnostykaTest` dowodzi obecności wszystkich pól nagłówka, w tym nazwy komputera
-- [x] 2.4 Test dowodzi wpisu o starcie sesji
+- [x] 2.1 Kompilacja przechodzi: `./mvnw.cmd -q compile` — 668ed37
+- [x] 2.2 Cały zestaw testów zielony: `./mvnw.cmd test` — 668ed37
+- [x] 2.3 `DiagnostykaTest` dowodzi obecności wszystkich pól nagłówka, w tym nazwy komputera — 668ed37
+- [x] 2.4 Test dowodzi wpisu o starcie sesji — 668ed37
 
 #### Manual
 
-- [x] 2.5 Inscenizacja czerwieni dla `DiagnostykaTest`
-- [x] 2.6 Uruchomienie i zamknięcie zostawia nagłówek, wpis o starcie i wpis o zakończeniu
-- [x] 2.7 Ścieżka logu z nagłówka wskazuje plik, który faktycznie czytasz
-- [x] 2.8 Wymuszony błąd ładowania widoku produkuje wpis ERROR z sekcją i ścieżką — zweryfikowane
-      skorumpowaniem treści `settings-view.fxml` (usunięty tag zamykający): wpis ERROR z sekcją
-      `USTAWIENIA`, ścieżką `view/settings-view.fxml` i pełnym stacktrace `LoadException`; po
-      przywróceniu pliku błąd znika. Pierwsza próba przez zmianę nazwy pliku trafiła w
-      `NullPointerException` ze strażnika `requireNonNull` — inna, świadomie nielogowana tu
-      ścieżka, należąca do Fazy 4 (patrz `## Critical Implementation Details`).
-- [x] 2.9 Empiryczne potwierdzenie rozwiązania grafu modułów — `javafx:run` tworzy plik z treścią (przeniesione z Fazy 1)
-- [x] 2.10 `log/` nie pojawia się w `git status` po uruchomieniu aplikacji (przeniesione z Fazy 1)
+- [x] 2.5 Inscenizacja czerwieni dla `DiagnostykaTest` — 668ed37
+- [x] 2.6 Uruchomienie i zamknięcie zostawia nagłówek, wpis o starcie i wpis o zakończeniu — 668ed37
+- [x] 2.7 Ścieżka logu z nagłówka wskazuje plik, który faktycznie czytasz — 668ed37
+- [x] 2.8 Wymuszony błąd ładowania widoku produkuje wpis ERROR z sekcją i ścieżką — 668ed37,
+      zweryfikowane skorumpowaniem treści `settings-view.fxml` (usunięty tag zamykający): wpis
+      ERROR z sekcją `USTAWIENIA`, ścieżką `view/settings-view.fxml` i pełnym stacktrace
+      `LoadException`; po przywróceniu pliku błąd znika. Pierwsza próba przez zmianę nazwy pliku
+      trafiła w `NullPointerException` ze strażnika `requireNonNull` — inna, świadomie
+      nielogowana tu ścieżka, należąca do Fazy 4 (patrz `## Critical Implementation Details`).
+- [x] 2.9 Empiryczne potwierdzenie rozwiązania grafu modułów — `javafx:run` tworzy plik z treścią (przeniesione z Fazy 1) — 668ed37
+- [x] 2.10 `log/` nie pojawia się w `git status` po uruchomieniu aplikacji (przeniesione z Fazy 1) — 668ed37
 
 ### Phase 3: Rotacja i przepełnienie pliku
 
