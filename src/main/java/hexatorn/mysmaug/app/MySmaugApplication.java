@@ -1,6 +1,7 @@
 package hexatorn.mysmaug.app;
 
 import hexatorn.mysmaug.controller.MainController;
+import hexatorn.mysmaug.logging.Diagnostics;
 import hexatorn.mysmaug.tools.ThemeManager;
 import hexatorn.mysmaug.tools.WindowResizeHelper;
 import javafx.application.Application;
@@ -9,15 +10,22 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class MySmaugApplication extends Application {
 
     private static final String FXML_SHELL = "/hexatorn/mysmaug/controller/main-view.fxml";
     private static final String IKONA_APLIKACJI = "/hexatorn/mysmaug/app-icon.png";
+    private static final Path KATALOG_LOGOW = Path.of("log");
+
+    private static final Logger log = LoggerFactory.getLogger(MySmaugApplication.class);
 
     /**
      * Składa scenę shella: wczytuje main-view.fxml i wstrzykuje ThemeManager do kontrolera.
@@ -58,9 +66,42 @@ public class MySmaugApplication extends Application {
         WindowResizeHelper.install(stage, scene);
     }
 
+    /**
+     * Granica startu sesji — wołane przed toolkitem JavaFX, więc sceny jeszcze nie ma.
+     * Pokrywa oba punkty wejścia (Launcher i javafx:run), bo oba wołają launch(MySmaugApplication).
+     */
+    @Override
+    public void init() {
+        sondujKatalogLogow();
+        Diagnostics.zalogujNaglowekStartowy(log);
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
         configureStage(stage, createShellScene());
         stage.show();
+    }
+
+    /**
+     * Granica końca sesji — JavaFX woła stop() przy każdym wyjściu przez Platform.exit(),
+     * więc pokrywa obie dzisiejsze ścieżki zamknięcia (pasek tytułu i sidebar).
+     */
+    @Override
+    public void stop() {
+        Diagnostics.zalogujZakonczenieSesji(log);
+    }
+
+    /**
+     * Zapewnia istnienie katalogu logów przed startem logowania. Porażka nie może przerwać
+     * startu aplikacji — Logback i tak milczy funkcjonalnie przy nieudanym zapisie (nie rzuca),
+     * więc na tym etapie nie ma jeszcze komu zgłosić błędu. Zapamiętanie wyniku i pokazanie
+     * go użytkownikowi należy do Fazy 7 (StanLogowania) — tu tylko sonda.
+     */
+    private static void sondujKatalogLogow() {
+        try {
+            Files.createDirectories(KATALOG_LOGOW);
+        } catch (IOException e) {
+            // Świadomie połknięte — patrz komentarz metody.
+        }
     }
 }

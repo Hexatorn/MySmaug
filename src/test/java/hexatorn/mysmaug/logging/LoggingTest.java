@@ -35,7 +35,14 @@ class LoggingTest {
         String znacznik = "znacznik-przebiegu-" + System.nanoTime();
         Logger log = LoggerFactory.getLogger(LoggingTest.class);
 
-        log.info("{} {}", znacznik, DIAKRYTYKI);
+        // Wiodąca pusta linia odsuwa prefiks logu (znacznik czasu, poziom, logger) od treści —
+        // ta sama technika co w Diagnostics, żeby linie w pliku miały spójną, wąską szerokość.
+        log.info("""
+
+                Test kodowania UTF-8
+                Znacznik   : {}
+                Diakrytyki : {}
+                """, znacznik, DIAKRYTYKI);
 
         assertThat(PLIK_LOGU)
                 .as("Plik logu nie powstał — appender plikowy nie zadziałał albo pisze gdzie indziej niż %s",

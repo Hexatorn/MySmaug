@@ -12,6 +12,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -26,6 +28,8 @@ import java.util.Objects;
  * to czysta nawigacja (F-05, Faza 1).
  */
 public class MainController {
+
+    private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
     /** Sekcje nawigacji; każda zna swój plik FXML (widok ładowany leniwie). */
     private enum Section {
@@ -217,6 +221,7 @@ public class MainController {
         try {
             return new FXMLLoader(url).load();
         } catch (IOException e) {
+            log.error("Nie udało się załadować widoku sekcji {} ({})", section, section.fxml, e);
             throw new UncheckedIOException("Nie udało się załadować widoku: " + section.fxml, e);
         }
     }
