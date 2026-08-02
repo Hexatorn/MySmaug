@@ -716,6 +716,76 @@ błędem i nie skraca diagnozy. Bez `@Tag("ui")`.
 - **Rozstrzygnięcie empiryczne**, które wpięcie łapie który przypadek; wynik
   zapisany w planie jako aneks do tej fazy, jeśli okaże się inny niż zakładany
 
+### Aneks (2026-08-02): rozstrzygnięcie empiryczne 4.8 — obie ścieżki wpięcia potrzebne, każda z innego powodu
+
+Zweryfikowano na żywej aplikacji (`./mvnw.cmd javafx:run`, docelowo **z `clean`** — patrz pułapka
+niżej), czterema kontrolowanymi obserwacjami z przełączaniem, które z dwóch wpięć jest aktywne.
+
+**Pułapka metodologiczna wykryta po drodze:** manualna inscenizacja awarii przez przemianowanie pliku
+FXML w `src/main/resources` wymaga `mvn clean` (albo równoważnego wyczyszczenia `target/classes`).
+Maven `resources:resources` **nie usuwa** z `target/classes` plików, których już nie ma w źródle —
+tylko kopiuje to, co aktualnie tam jest. Pierwsza próba bez `clean` dała fałszywy wynik: aplikacja
+pozornie wystartowała poprawnie (stara kopia zasobu wciąż leżała w `target/classes`), co przez chwilę
+wyglądało na niedeterminizm JavaFX. Dotyczy też przyszłych faz dotykających FXML (5-7).
+
+**Obserwacja 1 — wyjątek z sekcji ładowanej leniwie, PO starcie** (`settings-view.fxml`
+przemianowany; sekcja ładowana dopiero przy kliknięciu, już po zakończonym `start()`): złapany
+niezależnie od tego, czy aktywne jest wpięcie w `init()`, czy w `start()`, czy oba naraz. Zgodne ze
+standardową semantyką JDK: `Thread.currentThread().getUncaughtExceptionHandler()` sprawdza najpierw
+handler właściwy dla wątku (ten ze `start()`), a dopiero w jego braku — handler domyślny (ten z
+`init()`). Żadne z wpięć osobno nie jest tu zbędne — po prostu jedno zasłania drugie, gdy oba aktywne.
+
+**Obserwacja 2 — wyjątek W TRAKCIE `start()`** (`entry-view.fxml`, sekcja domyślna, przemianowany →
+`NullPointerException` ze strażnika `requireNonNull` w `MainController.loadView`, rzucony
+synchronicznie z wnętrza `createShellScene()`): złapany **wyłącznie** przez wpięcie w `init()`.
+Wpięcie w `start()` nie ma tu żadnego znaczenia — potwierdzone osobnym przełączeniem (init() aktywne /
+start() zakomentowane → złapane; init() zakomentowane / start() aktywne → **nic** nie trafia do logu).
+Mechanizm: wyjątek z wnętrza `start()` jest przechwytywany strukturalnie przez `LauncherImpl`
+(zwykłym `try/catch` wokół wywołania `theApp.start(...)`), zanim w ogóle dojdzie do sprawdzenia
+handlera na wątku FX. JavaFX najpierw woła `stop()` w ramach sprzątania (stąd w logu `KONIEC SESJI
+MYSMAUG` **przed** wpisem błędu — mylące przy linowym czytaniu, bo wygląda, jakby sesja zakończyła
+się czysto, a dopiero potem wystąpił błąd), potem opakowuje wyjątek i przerzuca go na wątek `main`
+(ten, który wołał `Application.launch(...)`). `main` nie ma własnego handlera wątku (wpięcie ze
+`start()` dotyczy tylko wątku FX Application Thread, na którym zostało wywołane) — pada więc na
+handler domyślny z `init()`.
+
+**Obserwacja 3 — ten sam `entry-view.fxml`, ale treść uszkodzona zamiast usuniętej** (brakujący tag
+zamykający → `LoadException: Label is not a valid type`, podtyp `IOException`): dała **dwa** wpisy
+zamiast jednego. Pierwszy — z loggera `MainController`, **przed** `KONIEC SESJI` — to nie Faza 4,
+tylko istniejący `catch (IOException e)` w `MainController.loadView` z Fazy 2, który łapie
+`LoadException` (bo to `IOException`) i loguje **zanim** zdąży rzucić dalej `UncheckedIOException`.
+Drugi — z `ExceptionHandler`, **po** `KONIEC SESJI`, wątek `main` — to ten sam mechanizm co w
+Obserwacji 2. Różnica względem Obserwacji 2 (jeden wpis): `Objects.requireNonNull` rzuca `NullPointer-
+Exception` **przed** blokiem `try` w `loadView`, więc ten guard nie jest objęty istniejącym catchem i
+leci prosto w górę bez przystanku — stąd tylko jeden wpis tam, gdzie tu są dwa. Dwa różne typy błędu w
+tym samym miejscu dają różną liczbę wpisów, bo trafiają w różne bramki po drodze; finalny mechanizm
+Fazy 4 (domyślny handler z `init()`, wątek `main`, po `KONIEC SESJI`) jest jednak ten sam w obu.
+
+**Obserwacja 4 — wyjątek z osobnego, zwykłego wątku spawnowanego wewnątrz `start()`** (nie z wątku
+FX): złapany **wyłącznie** przez wpięcie w `init()`. Wpięcie w `start()`
+(`Thread.currentThread().setUncaughtExceptionHandler(...)`) działa **tylko** na ten jeden wątek, na
+którym zostało wywołane (FX Application Thread) — nie rozciąga się na żaden inny wątek, nawet
+spawnowany chwilę później w tej samej metodzie. Potwierdza to podręcznikową semantykę JDK i dokładnie
+to, co Contract tej fazy zakładał: handler domyślny „pokrywa wątki bez własnego handlera" — globalnie,
+niezależnie od tego, gdzie i kiedy wątek powstał.
+
+| Scenariusz | `init()` (domyślny, globalny) | `start()` (tylko wątek FX) |
+| --- | --- | --- |
+| Wyjątek z event handlera PO starcie (leniwa sekcja) | łapie (jako fallback) | łapie (pierwszeństwo) |
+| Wyjątek W TRAKCIE `start()` (sekcja domyślna) | **łapie** (przez przerzut na `main`) | **nie łapie wcale** |
+| Wyjątek z osobnego wątku (spawnowany gdziekolwiek) | **łapie** (globalny) | nie dotyczy (inny wątek) |
+
+**Wniosek i decyzja usera:** wpięcie w `init()` samo w sobie wystarczyłoby do złapania **każdego**
+przetestowanego przypadku — wpięcie w `start()` nie dorzuca żadnej dodatkowej ścieżki poza tą, którą
+`init()` już pokrywa jako fallback. Mimo to **oba wpięcia zostają w kodzie bez zmian**. Powód nie jest
+hipotetyczny: przy okazji tej samej diagnostyki zaobserwowaliśmy, że TestFX instaluje własny mechanizm
+przechwytywania na wątku FX Application Thread, który przesłonił nasze wpięcie ze `start()` (stąd
+pierwsza, nieudana próba weryfikacji przez TestFX w tej fazie). To dowód, że coś na tym wątku *potrafi*
+nadpisać handler — jeśli w przyszłości (Fazy 5-7, kolejne biblioteki UI) zdarzy się to w **produkcji**,
+jawne wpięcie w `start()` jest jedyną szansą przywrócenia naszego handlera na tym konkretnym wątku;
+samo `init()` by tego nie naprawiło, bo nadpisany handler wątku ma pierwszeństwo przed domyślnym.
+Redundancja jest więc świadoma i tania (jedna linia), nie zaniedbana.
+
 **Implementation Note**: Po tej fazie kontrakt roadmapy F-02 jest domknięty.
 Zatrzymaj się na potwierdzenie manualne. To naturalny punkt wyjścia, jeśli
 pojemność sesji się kończy — Fazy 5-7 są rozszerzeniem i mogą pójść osobno.
@@ -1172,17 +1242,17 @@ Zapisy dla przyszłych zmian, żeby decyzje nie wyparowały z rozmowy
 
 #### Automated
 
-- [ ] 4.1 Kompilacja przechodzi: `./mvnw.cmd -q compile`
-- [ ] 4.2 Cały zestaw testów zielony: `./mvnw.cmd test`
-- [ ] 4.3 `HandlerWyjatkowTest` dowodzi zapisu komunikatu i klasy wyjątku
-- [ ] 4.4 `HandlerWyjatkowTest` dowodzi zapisu stacktrace'u i przyczyny źródłowej
+- [x] 4.1 Kompilacja przechodzi: `./mvnw.cmd -q compile` — 968eaef
+- [x] 4.2 Cały zestaw testów zielony: `./mvnw.cmd test` — 968eaef
+- [x] 4.3 `HandlerWyjatkowTest` dowodzi zapisu komunikatu i klasy wyjątku — 968eaef
+- [x] 4.4 `HandlerWyjatkowTest` dowodzi zapisu stacktrace'u i przyczyny źródłowej — 968eaef
 
 #### Manual
 
-- [ ] 4.5 Inscenizacja czerwieni dla `HandlerWyjatkowTest`
-- [ ] 4.6 Wymuszony wyjątek z handlera zdarzeń JavaFX trafia do logu ze stacktrace'em
-- [ ] 4.7 Wymuszony wyjątek ze strażnika `requireNonNull` trafia do logu
-- [ ] 4.8 Rozstrzygnięcie empiryczne, które wpięcie handlera łapie który przypadek
+- [x] 4.5 Inscenizacja czerwieni dla `HandlerWyjatkowTest` — 968eaef (atrapa `ExceptionHandler`, metoda pusta, dała `Tests run: 2, Failures: 2` na asercji o braku treści w logu, nie na błędzie kompilacji; użytkownik potwierdził powtarzając ten sam przebieg samodzielnie)
+- [x] 4.6 Wymuszony wyjątek z handlera zdarzeń JavaFX trafia do logu ze stacktrace'em — 968eaef (dowód zastępczy: `Platform.runLater` po `stage.show()` — mechanizm identyczny jak `onAction`, patrz aneks)
+- [x] 4.7 Wymuszony wyjątek ze strażnika `requireNonNull` trafia do logu — 968eaef (dowód: przemianowanie `entry-view.fxml`, patrz aneks Obserwacja 2)
+- [x] 4.8 Rozstrzygnięcie empiryczne, które wpięcie handlera łapie który przypadek — 968eaef (patrz aneks: obie ścieżki potrzebne, każda z innego powodu; kod bez zmian)
 
 ### Phase 5: Pasek statusu
 

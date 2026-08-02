@@ -3,7 +3,7 @@ change_id: file-logging
 title: File logging
 status: implementing
 created: 2026-07-29
-updated: 2026-07-31
+updated: 2026-08-02
 archived_at: null
 ---
 

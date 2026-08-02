@@ -44,18 +44,11 @@
 - **Rule**: Każdy lookup `getResource(...)` owijaj w `Objects.requireNonNull(url, "Brak zasobu: <ścieżka>")` zanim go użyjesz — czytelny komunikat z nazwą zasobu zamiast późniejszego NPE/„Location is not set". Trzymaj to spójnie we wszystkich punktach ładowania (entry-point i lazy-loadery).
 - **Applies to**: implement, impl-review
 
-## Bez połączenia z IDE nie ruszaj z edycjami — bramka zatwierdzania znika bez ostrzeżenia
-
-- **Context**: Praca nad kodem w sesji sprzężonej z IntelliJ przez serwer MCP `ide`. Zatwierdzanie edycji odbywa się w widoku diffa — w oknie edytora albo w terminalu wbudowanym w IDE; oba kanały dostarcza ta sama integracja.
-- **Problem**: Gdy `ide` się rozłączy, sesja nadal stosuje edycje, ale bramka nie pojawia się **nigdzie** — również w trybie manual, i bez fallbacku na prompt w terminalu. Konkret (F-01, Faza 3, 2026-07-27): trzy edycje (`ShellTest.java` oraz dwie w `plan.md`) weszły bez zatwierdzenia; użytkownik dowiedział się o nich z transkryptu, po fakcie. Po powrocie połączenia ta sama ścieżka zadziałała normalnie, co potwierdziło przyczynę. Objaw jest zdradliwy, bo brak promptu wygląda dokładnie tak samo jak zgoda — z obu stron.
-- **Rule**: Przed pierwszą edycją w sesji potwierdź, że `ide` odpowiada (`mcp__ide__getDiagnostics` — odczyt, bez skutków ubocznych). Bez odpowiedzi nie edytuj: zgłoś i czekaj. Gdy połączenie padnie w trakcie — przerwij ciąg edycji na najbliższej granicy pliku, zamiast dokładać kolejne „skoro i tak przechodzą". Reguła obowiązuje szczególnie w kodzie Java, gdzie diff w IDE jest jedynym praktycznym przeglądem zmiany (typy, importy, kontekst klasy). Braku bramki nie zastępuj wklejaniem kodu do czatu — to nie jest przegląd.
-- **Applies to**: implement, tdd, impl-review
-
 ## Padnięta sesja MCP `ide` czyni testy widoków flaky — wyklucz środowisko, zanim ruszysz kod
 
 - **Context**: Testy UI na realnym ekranie (TestFX/JavaFX, F-01 Faza 3). Robot klika w to, co akurat jest na wierzchu ekranu; okno zasłonięte przez IDE przejmuje kliknięcia, a test pada na asercji, nie na komunikacie wskazującym prawdziwą przyczynę.
 - **Problem**: Test nawigacji padał 17 na 20 przebiegów. Kilka godzin poszło na hipotezy o TestFX, flagach modułowych i kodzie testu — a winna była padnięta sesja MCP `ide`. Prawdopodobny mechanizm: przy żywym połączeniu IntelliJ usuwa się w tło na czas testu widoków i odsłania okno testowe; po rozłączeniu nie dostaje takiego impulsu i zostaje na wierzchu. Zgadza się z kompletem obserwacji — połączenie padnięte → 17/20 czerwonych; połączenie żywe i maszyna bezczynna → 41/41 zielonych bez żadnego obejścia; połączenie żywe, ale użytkownik klika w IntelliJ (okno wraca na wierzch) → czerwień.
-- **Rule**: Zanim uznasz test widoków za flaky, sprawdź, czy sesja `ide` żyje (`mcp__ide__getDiagnostics`). Padnięta zabiera odsłanianie okna i produkuje porażki nieodróżnialne od błędu kodu. Nie dokładaj obejść w rodzaju `stage.setAlwaysOnTop(true)`, dopóki nie wykluczysz środowiska — obejście zostaje w kodzie na stałe jako opłata za problem, którego już nie ma. Serie porównawcze prowadź w jednym, **zadeklarowanym** warunku (maszyna bezczynna albo normalna praca); pomiar w innym warunku niż ten, w którym padało, nie dowodzi niczego. Deklaracja musi wyprzedzać uruchomienie o osobną turę: poproś o nietykanie maszyny i **poczekaj na potwierdzenie**, zanim odpalisz przebieg. Ostrzeżenie w tej samej wiadomości co komenda jest bezwartościowe — człowiek czyta je już po starcie, a skażony przebieg trafia do wyników jako pełnoprawny pomiar i przesuwa wnioski. Powiązane z lekcją „Bez połączenia z IDE nie ruszaj z edycjami" — ta sama awaria, drugi skutek.
+- **Rule**: Zanim uznasz test widoków za flaky, sprawdź, czy sesja `ide` żyje (`mcp__ide__getDiagnostics`). Padnięta zabiera odsłanianie okna i produkuje porażki nieodróżnialne od błędu kodu. Nie dokładaj obejść w rodzaju `stage.setAlwaysOnTop(true)`, dopóki nie wykluczysz środowiska — obejście zostaje w kodzie na stałe jako opłata za problem, którego już nie ma. Serie porównawcze prowadź w jednym, **zadeklarowanym** warunku (maszyna bezczynna albo normalna praca); pomiar w innym warunku niż ten, w którym padało, nie dowodzi niczego. Deklaracja musi wyprzedzać uruchomienie o osobną turę: poproś o nietykanie maszyny i **poczekaj na potwierdzenie**, zanim odpalisz przebieg. Ostrzeżenie w tej samej wiadomości co komenda jest bezwartościowe — człowiek czyta je już po starcie, a skażony przebieg trafia do wyników jako pełnoprawny pomiar i przesuwa wnioski.
 - **Applies to**: implement, tdd, impl-review
 
 ## Test nie jest gotowy, dopóki nie zobaczysz go czerwonego — najtaniej pisząc go przed kodem
@@ -106,3 +99,10 @@
 - **Problem**: Testy niemożliwe do wykonania bez przywracania stanu sprzed implementacji
 - **Rule**: Planuj kolejność prac tak aby wszystkie wpisane punkty w Progres były możliwe do wykonania bez cofania postępu.
 - **Applies to**: implement, tdd
+
+## Domknij czerwień nowego modułu przed wpięciem go w istniejący kod
+
+- **Context**: Dowolna faza dodająca nowy, samodzielnie testowalny moduł, który zostanie potem wpięty (wired) w istniejący kod — zwłaszcza gdy samo wpięcie nie ma własnej pętli TDD (weryfikowane tylko manualnie).
+- **Problem**: Potwierdzenie czerwieni nowego modułu (checkbox typu 4.5) zostaje odhaczone dopiero na końcu fazy, po wielu kolejnych krokach (wpięcie, dalsza diagnostyka), zamiast od razu po GREEN modułu — checkbox wisi otwarty przez cały dalszy ciąg fazy.
+- **Rule**: Zamknij i potwierdź (w tym odhacz checkbox w Progress) cały cykl red-green dla nowego modułu W IZOLACJI, zanim przejdziesz do jego wpięcia w istniejący kod.
+- **Applies to**: tdd, implement
