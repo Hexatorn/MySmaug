@@ -141,6 +141,24 @@
     -fx-icon-color: -color-fg-default;
 }
 
+/* ───────── Pasek statusu (dolny region shella) — bazowo adaptuje się ───────── */
+.status-bar {
+    -fx-background-color: -color-bg-inset;
+    -fx-alignment: CENTER_LEFT;
+    -fx-pref-height: 28px;
+    -fx-padding: 0 0 0 14px;
+}
+
+.status-bar Label {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 12px;
+}
+
+/* Komunikat błędu — osobna klasa, żeby odróżnić się od zwykłego statusu. */
+.status-message-error {
+    -fx-text-fill: -color-danger-fg;
+}
+
 /* Dymek wyboru motywu (AtlantaFX Popover) — lista opcji tekstowych. */
 .theme-popover {
     -fx-padding: 4px;
@@ -257,4 +275,13 @@
 
 .theme-fioletowy .theme-selector:hover .ikonli-font-icon {
     -fx-icon-color: white;
+}
+
+.theme-fioletowy .status-bar {
+    /* Ten sam odcień co pasek tytułu — spójność góra/dół na purpurowym tle. */
+    -fx-background-color: derive(-color-accent-emphasis, -18%);
+}
+
+.theme-fioletowy .status-bar Label {
+    -fx-text-fill: white;
 }

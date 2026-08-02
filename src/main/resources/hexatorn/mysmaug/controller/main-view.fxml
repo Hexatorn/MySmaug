@@ -54,4 +54,10 @@
             </Button>
         </VBox>
     </left>
+    <!-- Pasek statusu (Faza 5): domyślnie pusty, wypełniany przez MainController.pokazStatus/pokazBlad. -->
+    <bottom>
+        <HBox styleClass="status-bar">
+            <Label fx:id="lblStatus"/>
+        </HBox>
+    </bottom>
 </BorderPane>

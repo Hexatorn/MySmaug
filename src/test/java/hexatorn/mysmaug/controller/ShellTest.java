@@ -3,6 +3,7 @@ package hexatorn.mysmaug.controller;
 import hexatorn.mysmaug.app.MySmaugApplication;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Testy shella — pokrywają jedyną realną logikę, jaką dziś ma: leniwe ładowanie widoków
- * i przełączanie sekcji. Celują w ryzyko „cicha regresja GUI: ekran przestaje się ładować
- * po zmianie, wykryte tygodnie później".
+ * i przełączanie sekcji, oraz (Faza 5) pasek statusu na dole shella. Celują w ryzyko
+ * „cicha regresja GUI: ekran przestaje się ładować po zmianie, wykryte tygodnie później".
  *
  * <p>Scena budowana przez {@link MySmaugApplication#createShellScene()}, czyli tę samą metodę,
  * której używa produkcja. Test omijający ten punkt pobiegłby inną ścieżką — bez wstrzykniętego
@@ -39,6 +40,8 @@ class ShellTest {
     private static final String WPROWADZANIE = "#btnWprowadzanie";
     private static final String PODSUMOWANIA = "#btnPodsumowania";
     private static final String USTAWIENIA = "#btnUstawienia";
+    private static final String STATUS = "#lblStatus";
+    private static final String KLASA_BLEDU = "status-message-error";
 
     @BeforeAll
     static void wyciszZrzutyTestFx() {
@@ -104,8 +107,78 @@ class ShellTest {
                 .isSameAs(widokWprowadzania);
     }
 
+    @Test
+    void bladWypchnietyNaBelkeDostajeOdrebnaKlaseCss(FxRobot robot) {
+        String komunikat = "awaria-testowa-" + System.nanoTime();
+
+        robot.interact(() -> controller(robot).pokazBlad(komunikat));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Label status = etykietaStatusu(robot);
+        assertThat(status.getText())
+                .as("Komunikat błędu wypchnięty przez kontroler nie pojawił się na pasku statusu")
+                .isEqualTo(komunikat);
+        assertThat(status.getStyleClass())
+                .as("Komunikat błędu nie dostał odrębnej klasy CSS odróżniającej go od zwykłego statusu")
+                .contains(KLASA_BLEDU);
+    }
+
+    @Test
+    void zwyklyKomunikatNaBelceNieDostajeKlasyBledu(FxRobot robot) {
+        String komunikat = "status-testowy-" + System.nanoTime();
+
+        robot.interact(() -> controller(robot).pokazStatus(komunikat));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Label status = etykietaStatusu(robot);
+        assertThat(status.getText())
+                .as("Zwykły komunikat wypchnięty przez kontroler nie pojawił się na pasku statusu")
+                .isEqualTo(komunikat);
+        assertThat(status.getStyleClass())
+                .as("Zwykły komunikat nie powinien nieść klasy CSS zarezerwowanej dla błędów")
+                .doesNotContain(KLASA_BLEDU);
+    }
+
+    @Test
+    void komunikatInformacyjnyNiePrzykrywaAktywnegoBledu(FxRobot robot) {
+        String blad = "awaria-priorytet-" + System.nanoTime();
+        String status = "status-po-bledzie-" + System.nanoTime();
+
+        robot.interact(() -> controller(robot).pokazBlad(blad));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> controller(robot).pokazStatus(status));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(etykietaStatusu(robot).getText())
+                .as("Komunikat informacyjny nadpisał aktywny błąd na pasku statusu")
+                .isEqualTo(blad);
+    }
+
+    @Test
+    void kolejnyBladPodczasAktywnegoDostajeLicznikWczesniejszych(FxRobot robot) {
+        String pierwszy = "awaria-pierwsza-" + System.nanoTime();
+        String drugi = "awaria-druga-" + System.nanoTime();
+
+        robot.interact(() -> controller(robot).pokazBlad(pierwszy));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> controller(robot).pokazBlad(drugi));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(etykietaStatusu(robot).getText())
+                .as("Drugi błąd podczas aktywnego pierwszego nie pokazał najnowszego komunikatu z licznikiem stłumionych")
+                .isEqualTo(drugi + " (+1 wcześniejszych)");
+    }
+
     private static BorderPane root(FxRobot robot) {
         return robot.lookup(ROOT).queryAs(BorderPane.class);
+    }
+
+    private static MainController controller(FxRobot robot) {
+        return (MainController) root(robot).getScene().getUserData();
+    }
+
+    private static Label etykietaStatusu(FxRobot robot) {
+        return robot.lookup(STATUS).queryAs(Label.class);
     }
 
     private static Button przycisk(FxRobot robot, String fxId) {

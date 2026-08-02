@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -56,6 +57,8 @@ public class MainController {
     private Button btnMaksymalizuj;
     @FXML
     private Button btnMotyw;
+    @FXML
+    private Label lblStatus;
 
     /** Manager motywu (Jasny/Ciemny/Fioletowy) — wstrzykiwany z MySmaugApplication po utworzeniu Scene. */
     private ThemeManager themeManager;
@@ -106,6 +109,52 @@ public class MainController {
     @FXML
     private void onActionZamknij() {
         Platform.exit();
+    }
+
+    /** Klasa CSS odróżniająca komunikat błędu od zwykłego statusu na pasku statusu. */
+    private static final String STATUS_ERROR_CLASS = "status-message-error";
+
+    /**
+     * Błąd na pasku statusu oznacza stan aplikacji, w którym dalsza praca jest
+     * niezalecana — raz aktywny, zostaje aktywny do końca sesji (żadnego cichego
+     * czyszczenia przez nawigację ani przez kolejny status).
+     */
+    private boolean bladAktywny;
+    private int liczbaStlumionychBledow;
+
+    /**
+     * Wypycha zwykły komunikat na pasek statusu. Bezpieczne z dowolnego wątku.
+     * Ignorowane, gdy na belce jest aktywny błąd — błąd ma priorytet.
+     */
+    public void pokazStatus(String komunikat) {
+        Platform.runLater(() -> {
+            if (bladAktywny) {
+                return;
+            }
+            lblStatus.setText(komunikat);
+        });
+    }
+
+    /**
+     * Wypycha komunikat błędu na pasek statusu. Bezpieczne z dowolnego wątku.
+     * Kolejny błąd podczas aktywnego pokazuje najnowszy komunikat z licznikiem
+     * błędów stłumionych po drodze — log ma komplet, belka tylko ostatni.
+     */
+    public void pokazBlad(String komunikat) {
+        Platform.runLater(() -> {
+
+            if (bladAktywny) {
+                liczbaStlumionychBledow++;
+                lblStatus.setText(komunikat + " (+" + liczbaStlumionychBledow + " wcześniejszych)");
+            } else {
+                bladAktywny = true;
+                lblStatus.setText(komunikat);
+            }
+            if (!lblStatus.getStyleClass().contains(STATUS_ERROR_CLASS)) {
+                lblStatus.getStyleClass().add(STATUS_ERROR_CLASS);
+            }
+
+        });
     }
 
     @FXML

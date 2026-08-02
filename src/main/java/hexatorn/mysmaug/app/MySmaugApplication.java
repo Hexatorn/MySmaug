@@ -37,7 +37,9 @@ public class MySmaugApplication extends Application {
 
     // Jedna instancja dla obu punktów wpięcia (domyślny handler JVM i handler wątku FX) — Faza 6
     // doda tłumienie ze stanem per typ wyjątku, które musi być współdzielone między oboma wpięciami.
-    private final Thread.UncaughtExceptionHandler handlerWyjatkow = new ExceptionHandler();
+    // Statyczne, bo createShellScene (Faza 5) rejestruje na niej odbiornik komunikatów, a ta metoda
+    // jest statyczna — współdzielona z testami widoku, które wołają ją bez instancji aplikacji.
+    private static final ExceptionHandler HANDLER_WYJATKOW = new ExceptionHandler();
 
     /**
      * Składa scenę shella: wczytuje main-view.fxml i wstrzykuje ThemeManager do kontrolera.
@@ -53,6 +55,12 @@ public class MySmaugApplication extends Application {
         // user-agent stylesheet i pilnuje auto light/dark wg motywu OS.
         MainController controller = fxmlLoader.getController();
         controller.setThemeManager(new ThemeManager(scene));
+        // Odkładamy referencję do kontrolera na scenie — jedyny punkt, w którym testy widoku
+        // (i przyszli konsumenci paska statusu) mogą go pobrać bez duplikowania FXMLLoadera.
+        scene.setUserData(controller);
+        // Szew status: handler wyjątków wypycha krótki komunikat na pasek statusu. Ten sam szew
+        // obsłuży bufor z Fazy 7 i potwierdzenie zapisu z S-01, bez drugiego mechanizmu.
+        HANDLER_WYJATKOW.ustawOdbiornikKomunikatow(controller::pokazBlad);
         return scene;
     }
 
@@ -92,7 +100,7 @@ public class MySmaugApplication extends Application {
         Diagnostics.zalogujNaglowekStartowy(log);
         // Pokrywa wątki bez własnego handlera, na obu punktach wejścia (Launcher i javafx:run) —
         // patrz też jawne wpięcie na wątku FX Application Thread w start().
-        Thread.setDefaultUncaughtExceptionHandler(handlerWyjatkow);
+        Thread.setDefaultUncaughtExceptionHandler(HANDLER_WYJATKOW);
     }
 
     @Override
@@ -101,7 +109,7 @@ public class MySmaugApplication extends Application {
         // nie zawsze go łapie — jawne wpięcie na samym wątku FX Application Thread, na którym
         // faktycznie teraz jesteśmy (init() biegnie wcześniej, na osobnym wątku JavaFX-Launcher,
         // zanim ten wątek w ogóle powstanie).
-        Thread.currentThread().setUncaughtExceptionHandler(handlerWyjatkow);
+        Thread.currentThread().setUncaughtExceptionHandler(HANDLER_WYJATKOW);
         configureStage(stage, createShellScene());
         stage.show();
     }
