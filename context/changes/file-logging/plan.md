@@ -803,6 +803,15 @@ realnym konsumentem — komunikatem o błędzie.
 Belka bez czegokolwiek do powiedzenia nie dałaby się sensownie zweryfikować, stąd
 budowa i pierwsze użycie w jednej fazie.
 
+### Aneks (2026-08-02): testy paska statusu w `ShellTest`, nie w osobnym `PasekStatusuTest`
+
+Kontrakt punktu 5 poniżej zakładał osobny plik `PasekStatusuTest.java` (`StatusBarTest`
+po mapowaniu nazw z aneksu Fazy 1). Decyzja usera przy starcie Fazy 5: testy paska
+statusu dopisane do istniejącego `src/test/java/hexatorn/mysmaug/controller/ShellTest.java`,
+bez nowego pliku. Javadoc klasy rozszerzony o pasek statusu jako drugi obszar
+odpowiedzialności pokrywany w tym pliku. Tytuły kroków 5.3-5.5 w `## Progress`
+(„`PasekStatusuTest` dowodzi…") czytaj przez to mapowanie: dowód leży w `ShellTest`.
+
 ### Changes Required
 
 #### 1. Region `<bottom>` w shellu
@@ -842,6 +851,31 @@ klasy CSS). Metoda musi być bezpieczna do wołania z wątku innego niż JavaFX 
 wypchnięcie na belkę z wątku obcego bez `Platform.runLater` rzuca. Handler
 wyjątków może zostać zawołany z dowolnego wątku, więc to nie jest hipoteza.
 
+### Aneks (2026-08-02): priorytet błędu nad statusem i licznik stłumionych błędów
+
+Odkrycie przy weryfikacji manualnej: błąd na pasku statusu niesie znaczenie
+silniejsze niż zwykły komunikat — sygnalizuje stan aplikacji, w którym dalsza
+praca jest **niezalecana** (część funkcji może nie działać, dane mogą być
+przetwarzane niewłaściwie; kontynuacja to ryzyko użytkownika). Z tego wynikają
+dwie zasady, których pierwotny kontrakt punktu 3 nie przewidywał:
+
+1. **Priorytet błędu.** `pokazStatus` nie nadpisuje aktywnego błędu — jeśli belka
+   pokazuje błąd, komunikat informacyjny jest ignorowany.
+2. **Licznik stłumionych błędów.** Kolejny błąd zgłoszony, gdy poprzedni jest
+   wciąż aktywny, pokazuje **najnowszy** komunikat z dopiskiem `"(+N
+   wcześniejszych)"`, gdzie N to liczba błędów stłumionych od pierwszego.
+
+Decyzja usera: **żadnego mechanizmu czyszczenia w tej fazie.** Skoro błąd oznacza
+„aplikacja w stanie niepewnym", nie może zniknąć przez zwykłą nawigację ani zostać
+po cichu przykryty statusem — raz aktywny, zostaje aktywny do końca sesji. Ewentualne
+odblokowanie (np. przez OK w dialogu z Fazy 6) to decyzja przyszłej fazy, nie tej.
+
+**Rozszerzony kontrakt**: `MainController` dostaje stan `bladAktywny` (boolean) i
+`liczbaStlumionychBledow` (int). Sprawdzenie `bladAktywny` musi siedzieć **wewnątrz**
+`Platform.runLater(...)`, nie przed nim — inaczej dwa wywołania z różnych wątków
+mogłyby się wyścigowo minąć (ta sama klasa ryzyka, którą już nazywa oryginalny
+kontrakt tego punktu).
+
 #### 4. Szew statusu — rejestracja odbiornika
 
 **Files**: `src/main/java/hexatorn/mysmaug/app/MySmaugApplication.java`,
@@ -862,7 +896,8 @@ mechanizmu.
 
 #### 5. Test paska statusu
 
-**File**: `src/test/java/hexatorn/mysmaug/controller/PasekStatusuTest.java`
+**File**: `src/test/java/hexatorn/mysmaug/controller/ShellTest.java` (rozszerzenie
+istniejącej klasy — patrz aneks powyżej)
 
 **Intent**: Dowieść, że belka istnieje w drzewie scen i faktycznie pokazuje
 wypchnięty komunikat.
@@ -885,6 +920,8 @@ komunikat błędu dostaje klasę CSS odróżniającą. Bariera
 - `PasekStatusuTest` dowodzi obecności belki w drzewie scen
 - `PasekStatusuTest` dowodzi, że wypchnięty komunikat pojawia się na belce
 - `PasekStatusuTest` dowodzi odrębnej klasy CSS dla komunikatu błędu
+- `ShellTest` dowodzi, że komunikat informacyjny nie przykrywa aktywnego błędu (aneks 2026-08-02)
+- `ShellTest` dowodzi, że kolejny błąd podczas aktywnego pokazuje najnowszy komunikat z licznikiem stłumionych (aneks 2026-08-02)
 - `ResourcesTest` zielony po zmianie w FXML i CSS
 
 #### Manual Verification
@@ -997,15 +1034,43 @@ Wymaga bufora, bo w chwili wykrycia awarii scena JavaFX jeszcze nie istnieje.
 Bufor i dialog są jednym mechanizmem — bufor nie ma innego konsumenta, a dialog
 bez niego nie ma jak zadziałać — więc idą w jednej fazie.
 
+### Aneks (2026-08-02): bufor uogólniony na `ExceptionHandler`, nie tylko sonda zapisywalności
+
+Odkrycie przy weryfikacji manualnej Fazy 5 (kryterium 5.12): wyjątek rzucony w
+`init()` **przed** rejestracją odbiornika w `createShellScene()`/`start()` trafia dziś
+tylko do logu — pasek statusu milczy, bo `ExceptionHandler.odbiornikKomunikatow` jest
+wtedy `null` (zgodnie z kontraktem Fazy 5: „odbiornik musi znosić brak konsumenta").
+Pierwotny kontrakt tej fazy ograniczał bufor wyłącznie do sondy zapisywalności
+katalogu logów, co zostawiłoby **każdy inny** wyjątek zgłoszony przed zmontowaniem
+shella bez żadnej ścieżki do UI — luka nienazwana w pierwotnym planie.
+
+Decyzja usera: uogólnić mechanizm zamiast dublować go dla drugiego wąskiego
+przypadku. `ExceptionHandler` (nie `StanLogowania`) przechowuje **ostatni** komunikat
+zgłoszony, zanim odbiornik zdążył się zarejestrować, i wypycha go automatycznie w
+momencie rejestracji (`ustawOdbiornikKomunikatow`, wołane z `createShellScene` już od
+Fazy 5) — bez osobnego kroku „sprawdź bufor po zmontowaniu shella" w
+`MySmaugApplication`/`MainController`. Zgodne z zapowiedzią z kontraktu punktu 4
+Fazy 5: „Ten sam szew obsłuży bufor z Fazy 7 i potwierdzenie zapisu z S-01, bez
+drugiego mechanizmu."
+
+Skutek dla kontraktu poniżej: `StanLogowania` przestaje być odrębnym mechanizmem
+bufora. Zostaje **sondą** zapisywalności, która przy awarii zgłasza komunikat przez
+ten sam kanał co `ExceptionHandler.uncaughtException` — dokładny kształt API
+współdzielonego kanału (czy `ExceptionHandler` dostaje osobną metodę zgłoszeniową dla
+nadawców innych niż `uncaughtException`, i jak to spina się z dialogiem z Fazy 6) do
+domknięcia przy realnym starcie tej fazy — tu zapisana jest **decyzja o zakresie**, nie
+gotowy projekt API.
+
 ### Changes Required
 
-#### 1. Sonda zapisywalności i bufor
+#### 1. Sonda zapisywalności
 
 **File**: `src/main/java/hexatorn/mysmaug/logging/StanLogowania.java`
 
 **Intent**: Wykryć niemożliwość zapisu **niezależnie od Logbacka** (który przy
-nieudanym utworzeniu pliku nie rzuca, tylko milczy funkcjonalnie) i przechować
-informację do momentu, gdy da się ją pokazać.
+nieudanym utworzeniu pliku nie rzuca, tylko milczy funkcjonalnie) i zgłosić ją przez
+ogólny bufor `ExceptionHandler` (patrz aneks powyżej) — bez własnego, odrębnego
+bufora do ręcznego opróżnienia.
 
 **Contract**: Sonda przed inicjalizacją logowania: próba utworzenia katalogu `log/`
 i sprawdzenie zapisywalności. Wynik zapamiętany wraz z przyczyną w formie zdatnej
@@ -1015,17 +1080,20 @@ już tam sonduje katalog — ta faza dokłada zapamiętanie wyniku).
 
 #### 2. Opróżnienie bufora po zmontowaniu shella
 
-**Files**: `src/main/java/hexatorn/mysmaug/app/MySmaugApplication.java`,
-`src/main/java/hexatorn/mysmaug/controller/MainController.java`
+**File**: `src/main/java/hexatorn/mysmaug/logging/ExceptionHandler.java`
 
 **Intent**: Pokazać zbuforowany komunikat w pierwszym momencie, w którym istnieje
-na czym go pokazać.
+na czym go pokazać — automatycznie, bez osobnego kroku odpytania bufora w
+`MySmaugApplication`/`MainController` (patrz aneks powyżej: bufor przeniesiony do
+`ExceptionHandler`, ten sam kanał co Faza 5).
 
-**Contract**: Po złożeniu sceny i wstrzyknięciu zależności do kontrolera
-(`MySmaugApplication.createShellScene`, linie 26-37) sprawdzenie bufora i — jeśli
-niesie awarię — wypchnięcie komunikatu błędu na pasek statusu oraz pokazanie
-dialogu. Bufor opróżniany, żeby komunikat nie wracał. Dialog przez ten sam
-komponent co Faza 6 — bez drugiej implementacji okna błędu.
+**Contract**: `ustawOdbiornikKomunikatow` (wołane z `createShellScene` już od Fazy 5,
+bez zmian w punkcie wywołania) — jeśli w buforze czeka komunikat sprzed rejestracji,
+wypchnięcie go natychmiast do nowo zarejestrowanego odbiornika i wyczyszczenie
+bufora, żeby nie wrócił przy kolejnej rejestracji. Dialog przez ten sam komponent co
+Faza 6 — bez drugiej implementacji okna błędu; dokładny sposób, w jaki dialog
+podłącza się pod ten sam bufor (osobny odbiornik czy ten sam kanał co pasek
+statusu), do rozstrzygnięcia przy realnym starcie tej fazy.
 
 #### 3. Test ścieżki awaryjnej
 
@@ -1258,21 +1326,23 @@ Zapisy dla przyszłych zmian, żeby decyzje nie wyparowały z rozmowy
 
 #### Automated
 
-- [ ] 5.1 Kompilacja przechodzi: `./mvnw.cmd -q compile`
-- [ ] 5.2 Cały zestaw testów zielony: `./mvnw.cmd test`
-- [ ] 5.3 `PasekStatusuTest` dowodzi obecności belki w drzewie scen
-- [ ] 5.4 `PasekStatusuTest` dowodzi, że wypchnięty komunikat pojawia się na belce
-- [ ] 5.5 `PasekStatusuTest` dowodzi odrębnej klasy CSS dla komunikatu błędu
-- [ ] 5.6 `ResourcesTest` zielony po zmianie w FXML i CSS
+- [x] 5.1 Kompilacja przechodzi: `./mvnw.cmd -q compile` — 87f4c2a
+- [x] 5.2 Cały zestaw testów zielony: `./mvnw.cmd test` — 87f4c2a
+- [x] 5.3 `PasekStatusuTest` dowodzi obecności belki w drzewie scen — 87f4c2a, dowód w `ShellTest` (patrz aneks Fazy 5)
+- [x] 5.4 `PasekStatusuTest` dowodzi, że wypchnięty komunikat pojawia się na belce — 87f4c2a, dowód w `ShellTest` (patrz aneks Fazy 5)
+- [x] 5.5 `PasekStatusuTest` dowodzi odrębnej klasy CSS dla komunikatu błędu — 87f4c2a, dowód w `ShellTest` (patrz aneks Fazy 5)
+- [x] 5.6 `ResourcesTest` zielony po zmianie w FXML i CSS — 87f4c2a
+- [x] 5.13 `ShellTest` dowodzi, że komunikat informacyjny nie przykrywa aktywnego błędu (aneks 2026-08-02) — 87f4c2a
+- [x] 5.14 `ShellTest` dowodzi, że kolejny błąd podczas aktywnego pokazuje najnowszy komunikat z licznikiem stłumionych (aneks 2026-08-02) — 87f4c2a
 
 #### Manual
 
-- [ ] 5.7 Inscenizacja czerwieni dla `PasekStatusuTest`
-- [ ] 5.8 Dwa zielone przebiegi pod rząd dla testów UI
-- [ ] 5.9 Przegląd wizualny w trzech motywach — kontrast, brak zlania, spójna wysokość
-- [ ] 5.10 Komunikat błędu wizualnie odróżnialny od zwykłego statusu
-- [ ] 5.11 Belka nie psuje układu przy zmianie rozmiaru i po maksymalizacji
-- [ ] 5.12 Wymuszony wyjątek pokazuje komunikat na belce — dowód szwu handler → belka
+- [x] 5.7 Inscenizacja czerwieni dla `PasekStatusuTest` — 87f4c2a, dowód w `ShellTest` (patrz aneks Fazy 5): opróżnienie ciał `pokazStatus`/`pokazBlad` dało czerwień na głównej asercji dla obu oryginalnych testów; testy 5.13/5.14 (aneks priorytetu/licznika) napisane i uruchomione przed logiką, czerwień na dokładnej treści oczekiwanego komunikatu
+- [x] 5.8 Dwa zielone przebiegi pod rząd dla testów UI — 87f4c2a
+- [x] 5.9 Przegląd wizualny w trzech motywach — kontrast, brak zlania, spójna wysokość — 87f4c2a
+- [x] 5.10 Komunikat błędu wizualnie odróżnialny od zwykłego statusu — 87f4c2a
+- [x] 5.11 Belka nie psuje układu przy zmianie rozmiaru i po maksymalizacji — 87f4c2a
+- [x] 5.12 Wymuszony wyjątek pokazuje komunikat na belce — dowód szwu handler → belka — 87f4c2a: rename `settings-view.fxml` wywołał `NullPointerException: Brak zasobu FXML: view/settings-view.fxml`, wpis trafił do logu i komunikat błędu pojawił się na pasku statusu
 
 ### Phase 6: Dialog ze stacktrace'em i tłumienie
 
