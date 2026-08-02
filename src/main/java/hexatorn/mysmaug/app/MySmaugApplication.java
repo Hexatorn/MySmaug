@@ -2,6 +2,7 @@ package hexatorn.mysmaug.app;
 
 import hexatorn.mysmaug.controller.MainController;
 import hexatorn.mysmaug.logging.Diagnostics;
+import hexatorn.mysmaug.logging.ExceptionHandler;
 import hexatorn.mysmaug.logging.LogRotation;
 import hexatorn.mysmaug.tools.ThemeManager;
 import hexatorn.mysmaug.tools.WindowResizeHelper;
@@ -33,6 +34,10 @@ public class MySmaugApplication extends Application {
     // plik logu w tym samym momencie (Faza 1). Pole musi zostać przypisane w init() PO sondzie
     // rotacji — inaczej rotacja próbowałaby przenieść plik, który appender ma już otwarty do zapisu.
     private Logger log;
+
+    // Jedna instancja dla obu punktów wpięcia (domyślny handler JVM i handler wątku FX) — Faza 6
+    // doda tłumienie ze stanem per typ wyjątku, które musi być współdzielone między oboma wpięciami.
+    private final Thread.UncaughtExceptionHandler handlerWyjatkow = new ExceptionHandler();
 
     /**
      * Składa scenę shella: wczytuje main-view.fxml i wstrzykuje ThemeManager do kontrolera.
@@ -85,10 +90,18 @@ public class MySmaugApplication extends Application {
         LogRotation.obrocJesliZaDuzy(PLIK_LOGU, PROG_ROTACJI_MB, LIMIT_ARCHIWALNYCH);
         log = LoggerFactory.getLogger(MySmaugApplication.class);
         Diagnostics.zalogujNaglowekStartowy(log);
+        // Pokrywa wątki bez własnego handlera, na obu punktach wejścia (Launcher i javafx:run) —
+        // patrz też jawne wpięcie na wątku FX Application Thread w start().
+        Thread.setDefaultUncaughtExceptionHandler(handlerWyjatkow);
     }
 
     @Override
     public void start(Stage stage) throws IOException {
+        // JavaFX obsługuje wyjątki z kolejki zdarzeń własną ścieżką i domyślny handler z init()
+        // nie zawsze go łapie — jawne wpięcie na samym wątku FX Application Thread, na którym
+        // faktycznie teraz jesteśmy (init() biegnie wcześniej, na osobnym wątku JavaFX-Launcher,
+        // zanim ten wątek w ogóle powstanie).
+        Thread.currentThread().setUncaughtExceptionHandler(handlerWyjatkow);
         configureStage(stage, createShellScene());
         stage.show();
     }
